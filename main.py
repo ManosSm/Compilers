@@ -86,6 +86,7 @@ class Lex:
         file.seek(self.current_char)
         state=0
         rec_string=""
+        eof_offset = 0
 
         while 1:
             in_read = file.read(1)
@@ -105,6 +106,7 @@ class Lex:
 
                 if in_read == "":                           # if eof
                     in_id = 23
+                    eof_offset = 1
                 else:
                     in_id = 22                              # if white character except eof
             elif in_read in self.symbol_dict:
@@ -119,21 +121,16 @@ class Lex:
             
             print(in_read)
             print(state)
-            
-            if state==0:                                        #NOTE: maybe improveivanb;ele
-                rec_string=""
-            
+
+            if state == 0:                                        #NOTE: maybe improveivanb;ele
+                rec_string = ""
+
             if state in self.final_state_set:                   # if state is final
-                rec_string = rec_string[0:(len(rec_string) + self.state_list[state][0])] #black box 
-                self.current_char = file.tell() + self.state_list[state][0]
+                rec_string = rec_string[0:(len(rec_string) + self.state_list[state][0] + eof_offset)]  # black box
+                self.current_char = file.tell() + self.state_list[state][0] + eof_offset
                 file.close()
-                return(Token(self.final_state_set[state], rec_string, self.current_line))
+                return Token(self.final_state_set[state], rec_string, self.current_line)
            
-
-
-
-        
-
 
 if __name__ == '__main__':
     lex = Lex("test.txt")
