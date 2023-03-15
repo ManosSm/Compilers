@@ -187,12 +187,38 @@ class Lex:
                 exit(1)     
 
 
+class syntax:
+
+    def __init__(self,file_name):
+        self.file_name = file_name
+        self.lex = Lex(file_name)
+
+    def startRule(self):
+        self.def_main_part()
+        self.call_main_part()
+
+    def def_main_part(self):
+        
+
+
+
+
+    def 
+        
+
+
+
+
+        
+
+
+
 
 
           
            
 
-if __name__ == '__main__':
+if  __name__ == '__main__':
     lex = Lex("test.txt")
 
     for i in range(100):
