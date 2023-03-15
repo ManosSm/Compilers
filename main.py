@@ -14,7 +14,7 @@ class Lex:
 
     def __init__(self, file_name):
         self.file_name = file_name
-        self.current_line = 0
+        self.current_line = 1
         self.current_char = 0
         self.keyword_set={"def","not","and","or","declare","print","return","if","else","while","int","input"}                   #TODO
         self.final_state_set=   {  
@@ -101,7 +101,7 @@ class Lex:
                 if in_read == "\n":                         # if changed line
                     self.current_line += 1
 
-                    print("current line:", self.current_line)
+                    #print("current line:", self.current_line)
 
                 if in_read == "":                           # if eof
                     in_id = 23
@@ -112,6 +112,15 @@ class Lex:
                 in_id = self.symbol_dict[in_read]
                 rec_string+=in_read                         # adding character to the recognised string
             else:
+
+                
+                rec_string+=in_read+file.read(9)                       # reading the next 9 characters to see if rec_string is "__main__"
+                #print("teeeeeeeest:",rec_string)
+                if rec_string=="\"__main__\"":
+                    self.current_char = file.tell()
+                    file.close()
+                    return Token("keyword", rec_string, self.current_line)
+                
                 print("Error: unknown character", in_read, "at line", self.current_line)
                 file.close()
                 exit(1)
@@ -129,19 +138,48 @@ class Lex:
 
             elif state in self.final_state_set:                   # if state is final
 
-                rec_string = rec_string[0:(len(rec_string) + self.state_list[state][0] + white_char_offset)]  # black box
+                rec_string = rec_string[0:(len(rec_string) + self.state_list[state][0] + white_char_offset)]    # black box magic
                 self.current_char = file.tell() + self.state_list[state][0] + white_char_offset
                 file.close()
 
-                if rec_string in self.keyword_set:                                                     # check if the string is a keyword                       
-                    return Token("keyword", rec_string, self.current_line)                             
+                if state==4:                                                                                    # if state is id
+
+                    if rec_string in self.keyword_set:                                                          # check if the string is a keyword
+                        return Token("keyword", rec_string, self.current_line)
+                 
+                    elif len(rec_string)>30:                                                                    #check if id is larger than 30 characters
+                        print("Error: ID", rec_string, "at line", self.current_line, "is too long (max 30 characters)")
+                        exit(1)
+                
+                #elif state==2 and (int(rec_string)<-(2**32-1) or int(rec_string)>2**32-1):                       #making sure that number is between -(2^32)-1 and 2^32-1                                 
+                    #print("Error: NUMBER", rec_string, "at line", self.current_line, "is out of range (-(2^32)-1 to 2^32-1)")
+                    #exit(1)
 
 
                 return Token(self.final_state_set[state], rec_string, self.current_line)
                 
             elif state == 99:                                    # if error
 
-                print("Error: unexpected character", in_read, "at line", self.current_line)
+
+                rec_string+=file.read(6)                            # reading the next 6 characters to see if rec_string is  #declare
+                #print("teeeeeeeest:",rec_string,"teeeeeeeest:")
+
+                if rec_string=="#declare":
+                    self.current_char = file.tell()
+                    file.close()
+                    return Token("keyword", rec_string, self.current_line)
+                
+                else:
+                    rec_string+=file.read(1)                       # reading the next character to see if rec_string is __name__
+                    if rec_string=="__name__":
+                        self.current_char = file.tell()
+                        file.close()
+                        return Token("keyword", rec_string, self.current_line)
+
+
+
+                
+                print("Error: unexpected character", in_read, "at line", self.current_line)             #if nothing from the above then its an error
                 file.close()
                 exit(1)     
 
@@ -151,7 +189,7 @@ class Lex:
 if __name__ == '__main__':
     lex = Lex("test.txt")
 
-    for i in range(50):
+    for i in range(100):
 
         tnk=lex.next_token()
         print("token:",tnk.family,tnk.recognized_string,tnk.line_number)
