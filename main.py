@@ -85,8 +85,10 @@ class Lex:
         state=0
         rec_string=""
         white_char_offset = 0
+        line_offset = 0
 
         while 1:
+            line_offset = 0
             in_read = file.read(1)
             in_id = 99
 
@@ -99,6 +101,7 @@ class Lex:
             elif in_read in string.whitespace:              # if a white character
                 white_char_offset = 1
                 if in_read == "\n":                         # if changed line
+                    line_offset= -1
                     self.current_line += 1
 
                     #print("current line:", self.current_line)
@@ -119,7 +122,7 @@ class Lex:
                 if rec_string=="\"__main__\"":
                     self.current_char = file.tell()
                     file.close()
-                    return Token("keyword", rec_string, self.current_line)
+                    return Token("keyword", rec_string, self.current_line+line_offset)
                 
                 print("Error: unknown character", in_read, "at line", self.current_line)
                 file.close()
@@ -133,7 +136,7 @@ class Lex:
             #print(state)
 
             if state == 0:                                        #NOTE: maybe improveivanb;ele
-
+                white_char_offset = 0
                 rec_string = ""
 
             elif state in self.final_state_set:                   # if state is final
@@ -145,7 +148,7 @@ class Lex:
                 if state==4:                                                                                    # if state is id
 
                     if rec_string in self.keyword_set:                                                          # check if the string is a keyword
-                        return Token("keyword", rec_string, self.current_line)
+                        return Token("keyword", rec_string, self.current_line+line_offset)
                  
                     elif len(rec_string)>30:                                                                    #check if id is larger than 30 characters
                         print("Error: ID", rec_string, "at line", self.current_line, "is too long (max 30 characters)")
@@ -156,7 +159,7 @@ class Lex:
                     #exit(1)
 
 
-                return Token(self.final_state_set[state], rec_string, self.current_line)
+                return Token(self.final_state_set[state], rec_string, self.current_line+line_offset)              # return token
                 
             elif state == 99:                                    # if error
 
@@ -167,14 +170,14 @@ class Lex:
                 if rec_string=="#declare":
                     self.current_char = file.tell()
                     file.close()
-                    return Token("keyword", rec_string, self.current_line)
+                    return Token("keyword", rec_string, self.current_line+line_offset)
                 
                 else:
                     rec_string+=file.read(1)                       # reading the next character to see if rec_string is __name__
                     if rec_string=="__name__":
                         self.current_char = file.tell()
                         file.close()
-                        return Token("keyword", rec_string, self.current_line)
+                        return Token("keyword", rec_string, self.current_line+line_offset)
 
 
 
@@ -182,6 +185,9 @@ class Lex:
                 print("Error: unexpected character", in_read, "at line", self.current_line)             #if nothing from the above then its an error
                 file.close()
                 exit(1)     
+
+
+
 
           
            

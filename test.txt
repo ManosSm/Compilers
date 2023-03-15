@@ -1,6 +1,11 @@
+<
+
 def main_factorial():
 #{
 #$ declarations #$
+
+
+
 #declare x
 #declare i,fact
 #$ body of main_factorial #$
