@@ -193,20 +193,88 @@ class syntax:
         self.file_name = file_name
         self.lex = Lex(file_name)
 
+
+
+
+
+
+
+
+
+
+
     def startRule(self):
         self.def_main_part()
         self.call_main_part()
 
+
+
     def def_main_part(self):
+
+        if not self.def_main_function():                #making sure that the program has at least one main function
+            print("Error: no main function found")
+            exit(2)
+
+        while(self.def_main_function()):
+            pass
+
+
+
+
+    def def_main_function(self):
         
+        tkn=self.lex.next_token()
+        if tkn.recognized_string=="def":                    #checking if the token's string is def
+            tkn=self.lex.next_token()
+            if tkn.family=="id":                                #checking if the token's family is id
+                tkn=self.lex.next_token()
+                if tkn.recognized_string=="(":                      #checking if the token's string is (
+                    tkn=self.lex.next_token()
+                    if tkn.recognized_string==")":                      #checking if the token's string is )
+                        tkn=self.lex.next_token()
+                        if tkn.recognized_string==":":                      #checking if the token's string is :
+                            tkn=self.lex.next_token()
+                            if tkn.recognized_string=="#{":                     #checking if the token's string is #{
+                                
+                                self.declarations()
+                                while(self.def_function()):
+                                    pass
+                                self.statements()
+                                tkn=self.lex.next_token()
+                                if tkn.recognized_string=="#}":                         #checking if the token's string is #}
+                                    return True
+                                else:
+                                    print("Error: expected #} at line", tkn.line_number)
+                                    exit(2)
+                            else:
+                                print("Error: expected #{ at line", tkn.line_number)
+                                exit(2)
+                        else:
+                            print("Error: expected : at line", tkn.line_number)
+                            exit(2)
+                    else:
+                        print("Error: expected ) at line", tkn.line_number)
+                        exit(2)
+                else:
+                    print("Error: expected ( at line", tkn.line_number)
+                    exit(2)
+            else:
+                print("Error: expected id at line", tkn.line_number)
+                exit(2)
+        else:
+            return False
+
+    
 
 
+    def declarations(self):
+        pass
 
+    def def_function(self):
+        pass
 
-    def 
-        
-
-
+    def statements(self):
+        pass
 
 
         
