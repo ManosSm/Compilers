@@ -3,9 +3,6 @@
 def main_factorial():
 #{
 #$ declarations #$
-
-
-
 #declare x
 #declare i,fact
 #$ body of main_factorial #$
@@ -19,6 +16,9 @@ i = i + 1;
 #}
 print(fact);
 #}
+
+
+
 def main_fibonacci():
 #{
 #declare x
