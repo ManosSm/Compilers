@@ -215,33 +215,37 @@ class syntax:
             print("Error: no main function found")
             exit(2)
 
-        while(self.def_main_function()):
-            pass
-
-
-
-
-    def def_main_function(self):
-        
         tkn=self.lex.next_token()
-        if tkn.recognized_string=="def":                    #checking if the token's string is def
+
+        while(self.def_main_function(tkn)):
             tkn=self.lex.next_token()
-            if tkn.family=="id":                                #checking if the token's family is id
-                tkn=self.lex.next_token()
-                if tkn.recognized_string=="(":                      #checking if the token's string is (
-                    tkn=self.lex.next_token()
-                    if tkn.recognized_string==")":                      #checking if the token's string is )
-                        tkn=self.lex.next_token()
-                        if tkn.recognized_string==":":                      #checking if the token's string is :
-                            tkn=self.lex.next_token()
-                            if tkn.recognized_string=="#{":                     #checking if the token's string is #{
-                                
-                                self.declarations()
-                                while(self.def_function()):
-                                    pass
+
+
+
+
+    def def_main_function(self,tkn_):
+        
+        tkn=tkn_
+        if tkn.recognized_string == "def":                    #checking if the token's string is def
+            tkn = self.lex.next_token()
+            if tkn.family == "id":                                #checking if the token's family is id
+                tkn = self.lex.next_token()
+                if tkn.recognized_string == "(":                      #checking if the token's string is (
+                    tkn = self.lex.next_token()
+                    if tkn.recognized_string == ")":                      #checking if the token's string is )
+                        tkn = self.lex.next_token()
+                        if tkn.recognized_string == ":":                      #checking if the token's string is :
+                            tkn = self.lex.next_token()
+                            if tkn.recognized_string == "#{":                     #checking if the token's string is #{
+
+
+                                tkn = self.lex.next_token()
+                                self.declarations(tkn)
+                                while(self.def_function(tkn)):
+                                    tkn = self.lex.next_token()
                                 self.statements()
-                                tkn=self.lex.next_token()
-                                if tkn.recognized_string=="#}":                         #checking if the token's string is #}
+                               
+                                if tkn.recognized_string == "#}":                         #checking if the token's string is #}
                                     return True
                                 else:
                                     print("Error: expected #} at line", tkn.line_number)
@@ -266,16 +270,141 @@ class syntax:
 
     
 
+    def def_function(self,tkn_):
+        tkn = tkn_
+        if tkn.recognized_string =="def":                    #checking if the token's string is def
+            tkn = self.lex.next_token()
+            if tkn.family=="id":                                #checking if the token's family is id
+                tkn = self.lex.next_token()
+                if tkn.recognized_string == "(":                      #checking if the token's string is (
+                    tkn = self.lex.next_token()
+                    if self.id_list(tkn):                                   #calling id_list                         #NOTE
+                        tkn = self.lex.next_token()
+                        if tkn.recognized_string == ")":                      #checking if the token's string is )
+                            tkn = self.lex.next_token()
+                            if tkn.recognized_string == ":":                      #checking if the token's string is :
+                                tkn = self.lex.next_token()
+                                if tkn.recognized_string == "#{":                     #checking if the token's string is #{
+                                    
+                                    tkn = self.lex.next_token()
+                                    if self.declarations(tkn):                                  #calling declarations
+                                        tkn=self.lex.next_token()
+                                        while(self.def_function(tkn)):
+                                            tkn=self.lex.next_token()
+                                        if(self.statements()):                                  #calling statements
+                                            tkn=self.lex.next_token()
+                                        
+                                            if tkn.recognized_string == "#}":                         #checking if the token's string is #}
+                                                return True
+                                            else:
+                                                print("Error: expected #} at line", tkn.line_number)
+                                                exit(2)
+                                        else:
+                                            print("Error: expected statements at line", tkn.line_number)
+                                            exit(2)
+                                    else:
+                                        print("Error: expected declarations at line", tkn.line_number)
+                                        exit(2)
+                                else:
+                                    print("Error: expected #{ at line", tkn.line_number)
+                                    exit(2)
+                            else:
+                                print("Error: expected : at line", tkn.line_number)
+                                exit(2)
+                        else:
+                            print("Error: expected ) at line", tkn.line_number)
+                            exit(2)
+                    else:
+                        print("Error: expected id at line", tkn.line_number)
+                        exit(2)
+                else:
+                    print("Error: expected ( at line", tkn.line_number)
+                    exit(2)
+            else:
+                print("Error: expected id at line", tkn.line_number)
+                exit(2)
+        else:
+            return False
+            
+    
+
+
 
     def declarations(self):
-        pass
+        while(self.declaration_line()):
+            pass
+    
 
-    def def_function(self):
-        pass
+
+
+    def declaration_line(self):
+        tkn = self.lex.next_token()
+        if tkn.recognized_string == "#declare":                     #checking if the token's string is #declare
+            self.id_list()                                          #calling id_list
+        else:
+            return False
+
+
+
+
+    def statement(self):
+        tkn=self.lex.next_token()
+
+        if (self.simple_statement(tkn)):
+            return True
+        elif (self.structured_statement(tkn)):
+            return True
+
+
+
+
 
     def statements(self):
         pass
 
+    def simple_statement(self,tkn_):
+        pass
+
+    def structured_statement(self,tkn_):
+        pass
+
+    def assignment_stat(self):
+        pass
+
+    def print_stat(self):
+        pass
+
+    def return_stat(self):
+        pass
+
+    def if_stat(self):
+        pass
+
+    def while_stat(self):
+        pass
+
+    def id_list(self):
+        pass
+
+    def expression(self):
+        pass
+
+    def term(self):
+        pass
+
+    def factor(self):
+        pass
+
+    def idtail(self):
+        pass
+
+    def actual_par_list(self):
+        pass
+
+    def optional_sign(self):
+        pass
+
+    def
 
         
 
