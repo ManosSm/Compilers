@@ -19,9 +19,9 @@ class Lex:
         self.keyword_set={"def","not","and","or","declare","print","return","if","else","while","int","input"}                   #TODO
         self.final_state_set=   {  
                                     2:"number",
-                                    4:"id",
-                                    5:"addOperator",
-                                    6:"mulOperator",
+                                    4:"id",         
+                                    5:"addOparator",
+                                    6:"mulOp",
                                     8:"groupSymbol",
                                     12:"delimiter",
                                     14:"assignment",
@@ -189,12 +189,7 @@ class Lex:
 
 
 
-
-
-##########################################################      syntax      ##########################################################
-
-
-
+#############################################################################################################
 
 
 
@@ -203,7 +198,7 @@ class syntax:
     def __init__(self,file_name):
         self.file_name = file_name
         self.lex = Lex(file_name)
-        #self.queue = []
+        self.tkn_queue = []
 
 
 
@@ -223,17 +218,17 @@ class syntax:
             print("Error: no main function found")
             exit(2)
 
-        tkn=self.lex.next_token()
-
-        while(self.def_main_function(tkn)):
-            tkn=self.lex.next_token()
+        while(self.def_main_function()):
+            pass
 
 
 
 
     def def_main_function(self,tkn_):
         
-        tkn=tkn_
+        tkn= self.tkn_queue.pop(0) if self.tkn_queue else self.lex.next_token()         
+
+
         if tkn.recognized_string == "def":                    #checking if the token's string is def
             tkn = self.lex.next_token()
             if tkn.family == "id":                                #checking if the token's family is id
@@ -247,11 +242,7 @@ class syntax:
                             if tkn.recognized_string == "#{":                     #checking if the token's string is #{
 
 
-                                tkn = self.lex.next_token()
-                                self.declarations(tkn)
-                                while(self.def_function(tkn)):
-                                    tkn = self.lex.next_token()
-                                self.statements()
+                               
                                
                                 if tkn.recognized_string == "#}":                         #checking if the token's string is #}
                                     return True
@@ -278,60 +269,32 @@ class syntax:
 
     
 
-    def def_function(self,tkn):
-        
-        if tkn.recognized_string == "def":                    #checking if the token's string is def
+    def def_function(self,tkn_):
+        tkn = tkn_
+        if tkn.recognized_string =="def":                    #checking if the token's string is def
             tkn = self.lex.next_token()
-            if tkn.family =="id":                                #checking if the token's family is id
+            if tkn.family=="id":                                #checking if the token's family is id
                 tkn = self.lex.next_token()
                 if tkn.recognized_string == "(":                      #checking if the token's string is (
                     tkn = self.lex.next_token()
-
-
-                    
-                    maybe_tkn=self.id_list(tkn)                                   #calling id_list                         #NOTE
-
-
-
-                    if maybe_tkn:                                             #if id_list returns a token
-                        tkn=maybe_tkn
-                        
+                    if self.id_list(tkn):                                   #calling id_list                         #NOTE
+                        tkn = self.lex.next_token()
                         if tkn.recognized_string == ")":                      #checking if the token's string is )
                             tkn = self.lex.next_token()
                             if tkn.recognized_string == ":":                      #checking if the token's string is :
                                 tkn = self.lex.next_token()
                                 if tkn.recognized_string == "#{":                     #checking if the token's string is #{
-                                    tkn = self.lex.next_token()
                                     
-
-                                    maybe_tkn=self.declarations(tkn)                         #calling declarations                        
-
-
-                                    if maybe_tkn:                                            #if declarations returns a token
-                                        tkn=maybe_tkn
+                                    tkn = self.lex.next_token()
+                                    #NOTE
+                                    if self.declarations(tkn):                                  #calling declarations
+                                        tkn=self.lex.next_token()
                                         
-
-
-                                        while(True):
-
-                                            maybe_tkn = self.def_function(tkn)                  #calling def_function
-
-                                            if maybe_tkn:                                       #if maybe_tkn is not None
-                                                tkn = maybe_tkn
-                                            else:                                               #if maybe_tkn is None
-                                                break
-
-
-
-                                        
+                                        while(self.def_function(tkn)):
+                                            tkn=self.lex.next_token()
                                         if(self.statements()):                                  #calling statements
                                             tkn=self.lex.next_token()
                                         
-
-
-
-
-
                                             if tkn.recognized_string == "#}":                         #checking if the token's string is #}
                                                 return True
                                             else:
@@ -353,7 +316,7 @@ class syntax:
                             print("Error: expected ) at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected id_list at line", tkn.line_number)
+                        print("Error: expected id at line", tkn.line_number)
                         exit(2)
                 else:
                     print("Error: expected ( at line", tkn.line_number)
@@ -362,11 +325,9 @@ class syntax:
                 print("Error: expected id at line", tkn.line_number)
                 exit(2)
         else:
-            return None
+            return False
             
     
-
-
 
 
 
@@ -374,13 +335,13 @@ class syntax:
 
         while(True):
 
-            maybe_tkn = self.declaration_line(tkn)                  #calling declaration_line
+            maybe_tkn= self.declaration_line(tkn)
+            if maybe_tkn:
+                return maybe_tkn
+            else:
+                return self.lex.next_token()
 
-            if maybe_tkn:                                           #if maybe_tkn is not None
-                tkn = maybe_tkn
-            else:                                                   #if maybe_tkn is None
-                return tkn
-
+    
 
 
 
@@ -388,12 +349,11 @@ class syntax:
 
         if tkn.recognized_string == "#declare":                     #checking if the token's string is #declare
             tkn = self.lex.next_token()
-            maybe_tkn = self.id_list(tkn)                           #calling id_list
-           
-            if maybe_tkn:                                           #if maybe_tkn is not None
+            maybe_tkn=self.id_list(tkn)                                          #calling id_list
+            if maybe_tkn:
                 return maybe_tkn
-            else:                                                   #if maybe_tkn is None                      
-                return tkn
+            else:
+                return self.lex.next_token()
 
         else:
             return None                                             #returning None if the token's string is not #declare
@@ -401,13 +361,13 @@ class syntax:
 
 
 
-    def statement(self,tkn):
+    def statement(self):
+        tkn=self.lex.next_token()
 
-        #if (self.simple_statement(tkn)):
-         #   return True
-        #elif (self.structured_statement(tkn)):
-            #return True
-        pass
+        if (self.simple_statement(tkn)):
+            return True
+        elif (self.structured_statement(tkn)):
+            return True
 
 
 
@@ -416,10 +376,10 @@ class syntax:
     def statements(self):
         pass
 
-    def simple_statement(self,tkn):
+    def simple_statement(self,tkn_):
         pass
 
-    def structured_statement(self,tkn):
+    def structured_statement(self,tkn_):
         pass
 
     def assignment_stat(self):
@@ -437,167 +397,36 @@ class syntax:
     def while_stat(self):
         pass
 
+    def id_list(self):
+        pass
 
+    def expression(self):
+        pass
 
+    def term(self):
+        pass
 
+    def factor(self):
+        pass
 
-    def id_list(self,tkn):
+    def idtail(self):
+        pass
 
-        if tkn.family == "id":                      # checking if the token's family is id
-            tkn = self.lex.next_token()
-            while tkn.recognized_string == ",":     # checking if the token's string is ,
-                tkn = self.lex.next_token()         # calling next token before going inside any methods
-                if tkn.family == "id":              # checking if the token's family is id
-                    tkn = self.lex.next_token()
-                else:
-                    print("Error: expected an id at line", tkn.line_number)
-                    exit(2)
-            return tkn
-        else:
-            return tkn
+    def actual_par_list(self):
+        pass
 
+    def optional_sign(self):
+        pass
 
+    #def
 
-
-
-
-
-
-    def expression(self,tkn):
-       
-        if self.optional_sign(tkn):                                         # checking if it's an optional_sign
-            tkn = self.lex.next_token()                                     # calling next token before going inside any methods
-            
-            maybe_tkn = self.term(tkn)                                      # calling term
-            if maybe_tkn:                                                   # checking if it's a term
-                tkn = maybe_tkn
-
-
-                while tkn.family == "addOperator":                          # checking if the token's family is addOperator
-                    tkn = self.lex.next_token()                             # calling next token before going inside any methods
-                    maybe_tkn=self.term(tkn)                                # calling term
-                    if maybe_tkn:                                           # checking if it's a term
-                        tkn = maybe_tkn
-                    else:
-                        print("Error: expected a term at line", tkn.line_number)
-                        exit(2)
-                return tkn
-            else:
-                print("Error: expected a term at line", tkn.line_number)
-                exit(2)
-        else:
-            return None
-        
-
-    
-
-
-
-
-    def term(self,tkn):
-            
-        maybe_tkn = self.factor(tkn)
-        if maybe_tkn:                                           # checking if it's a factor       
-            tkn = maybe_tkn
-            while tkn.family == "mulOperator":                  # checking if the token's family is mulOperator
-                tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                maybe_tkn = self.factor(tkn)
-                if maybe_tkn:                                   # checking if it's a factor
-                    tkn = maybe_tkn
-                else:
-                    print("Error: expected a factor at line", tkn.line_number)
-                    exit(2)
-            return tkn
-        else:
-            return None
-
-
-
-
-    def factor(self,tkn):
-        
-        if tkn.family == "number":                              # checking if the token's family is number
-            return self.lex.next_token()
-
-        elif tkn.recognized_string == "(":                      # checking if the token's string is (
-            tkn = self.lex.next_token()
-            maybe_tkn = self.expression(tkn)                    # calling expression
-            if maybe_tkn:
-                tkn = maybe_tkn
-                if tkn.recognized_string == ")":                # checking if the token's string is )
-                    return self.lex.next_token()
-                else:
-                    print("Error: expected ) at line", tkn.line_number)
-                    exit(2)
-            else:
-                print("Error: expected expression at line", tkn.line_number)
-                exit(2)
-            
-        elif tkn.family == "id":                                # checking if the token's family is id
-            tkn = self.lex.next_token()
-            return self.idtail(tkn)
-
-        else:                                                   # if none of the above           
-            return None 
-
-
-
-
-    def idtail(self,tkn):
-
-        if tkn.recognized_string == "(":                            # checking if the token's string is (
-            tkn = self.lex.next_token()                             # calling next token before going inside any methods
-            maybe_tkn = self.actual_par_list(tkn)                   # calling actual_par_list
-            if maybe_tkn:                                           # if maybe_tkn is not None
-                tkn = maybe_tkn
-                if tkn.recognized_string == ")":                    # checking if the token's string is )
-                    return self.lex.next_token()
-                else:
-                    print("Error: expected ) at line", tkn.line_number)
-                    exit(2)
-            else:
-                print("Error: expected actual_par_list at line", tkn.line_number)
-                exit(2)
-        else:
-            return tkn    
         
 
 
+    def test(self,tkn):
+        tkn=self.lex.next_token()
+        tkn=self.lex.next_token()
 
-
-
-    def actual_par_list(self,tkn):
-
-
-        maybe_tkn = self.expression(tkn)                            #calling expression
-
-
-        if maybe_tkn:                               
-            tkn = maybe_tkn
-            while tkn.recognized_string == ",":     
-                tkn = self.lex.next_token()    
-
-                maybe_tkn = self.expression(tkn)                     #calling expression     
-                if maybe_tkn:              
-                    tkn = maybe_tkn
-                else:
-                    print("Error: expected an expression at line", tkn.line_number)
-                    exit(2)
-            return tkn
-        else:
-            return tkn
-
-
-
-
-
-    def optional_sign(self,tkn):
-        
-        if tkn.family == "addOperator":
-            return True
-        else:
-            return False
-        
 
 
           
