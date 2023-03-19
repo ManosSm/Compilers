@@ -480,7 +480,8 @@ class syntax:
             tkn = self.lex.next_token()
             if tkn.recognized_string == "=":            # checking if the token's string is =
                 tkn = self.lex.next_token()
-                maybe_tkn = self.expression(tkn)        # calling expression   
+                maybe_tkn = self.expression(tkn)        # calling expression
+
                 if maybe_tkn:                           # checking if it's an expression and reads it
                     tkn = maybe_tkn
                     if tkn.recognized_string == ";":    # checking if the token's string is ;
@@ -764,29 +765,25 @@ class syntax:
 
     def expression(self,tkn):
        
-        if self.optional_sign(tkn):                                         # checking if it's an optional_sign
-            tkn = self.lex.next_token()                                     # calling next token before going inside any methods
-            
-            maybe_tkn = self.term(tkn)                                      # calling term
-            if maybe_tkn:                                                   # checking if it's a term
-                tkn = maybe_tkn
-
-
-                while tkn.family == "addOperator":                          # checking if the token's family is addOperator
-                    tkn = self.lex.next_token()                             # calling next token before going inside any methods
-                    maybe_tkn=self.term(tkn)                                # calling term
-                    if maybe_tkn:                                           # checking if it's a term
-                        tkn = maybe_tkn
-                    else:
-                        print("Error 55: expected a term at line", tkn.line_number)
-                        exit(2)
-                return tkn
-            else:
-                print("Error 56: expected a term at line", tkn.line_number)
-                exit(2)
-        else:
-            return None
+        tkn = self.optional_sign(tkn)                                   # checking if it's an optional_sign
         
+        maybe_tkn = self.term(tkn)                                      # calling term
+        if maybe_tkn:                                                   # checking if it's a term
+            tkn = maybe_tkn
+
+
+            while tkn.family == "addOperator":                          # checking if the token's family is addOperator
+                tkn = self.lex.next_token()                             # calling next token before going inside any methods
+                maybe_tkn=self.term(tkn)                                # calling term
+                if maybe_tkn:                                           # checking if it's a term
+                    tkn = maybe_tkn
+                else:
+                    print("Error 55: expected a term at line", tkn.line_number)
+                    exit(2)
+            return tkn
+        else:
+            print("Error 56: expected a term at line", tkn.line_number)
+            exit(2)
 
     
 
@@ -893,9 +890,9 @@ class syntax:
     def optional_sign(self,tkn):
         
         if tkn.family == "addOperator":
-            return True
+            return self.lex.next_token()
         else:
-            return False
+            return tkn
         
     
 
