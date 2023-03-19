@@ -124,7 +124,7 @@ class Lex:
                     file.close()
                     return Token("keyword", rec_string, self.current_line+line_offset)
                 
-                print("Error: unknown character", in_read, "at line", self.current_line)
+                print("Error 0: unknown character", in_read, "at line", self.current_line)
                 file.close()
                 exit(1)
 
@@ -182,7 +182,7 @@ class Lex:
 
 
                 
-                print("Error: unexpected character", in_read, "at line", self.current_line)             #if nothing from the above then its an error
+                print("Error 1: unexpected character", in_read, "at line", self.current_line)             #if nothing from the above then its an error
                 file.close()
                 exit(1)     
 
@@ -219,15 +219,15 @@ class syntax:
         maybe_tkn = self.def_main_part(tkn)                 #calling the def_main_part function
 
         if not maybe_tkn:                                   #making sure that the program has a def_main_part
-            print("Error: no def_main_part found")
+            print("Error 2: no def_main_part found")
             exit(2)
         
         maybe_tkn = self.call_main_part(tkn)                #calling the call_main_part function
         if not maybe_tkn:                                   #making sure that the program has a call_main_part                               
-            print("Error: no call_main_part found")
+            print("Error 3: no call_main_part found")
             exit(2)
         elif not (maybe_tkn.family == "eof"):               #making sure that the program has no more tokens after the call_main_part
-            print("Error: unexpected token",maybe_tkn.recognized_string,"at line",maybe_tkn.line_number)
+            print("Error 4: unexpected token",maybe_tkn.recognized_string,"at line",maybe_tkn.line_number)
             exit(2)
 
 
@@ -278,25 +278,25 @@ class syntax:
                                         return True
 
                                     else:   
-                                        print("Error: expected #} at line", tkn.line_number)
+                                        print("Error 5: expected #} at line", tkn.line_number)
                                         exit(2)
                                 else:
-                                    print("Error: expected statement at line", tkn.line_number)
+                                    print("Error 6: expected statement at line", tkn.line_number)
                                     exit(2)         
                             else:
-                                print("Error: expected #{ at line", tkn.line_number)
+                                print("Error 7: expected #{ at line", tkn.line_number)
                                 exit(2)
                         else:
-                            print("Error: expected : at line", tkn.line_number)
+                            print("Error 8: expected : at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ) at line", tkn.line_number)
+                        print("Error 9: expected ) at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected ( at line", tkn.line_number)
+                    print("Error 10: expected ( at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected id at line", tkn.line_number)
+                print("Error 11: expected id at line", tkn.line_number)
                 exit(2)
         else:
             return False
@@ -350,25 +350,25 @@ class syntax:
                                     if tkn.recognized_string == "#}":                    #checking if the token's string is #}
                                         return True
                                     else:
-                                        print("Error: expected #} at line", tkn.line_number)
+                                        print("Error 12: expected #} at line", tkn.line_number)
                                         exit(2)
                                 else:
-                                    print("Error: expected statements at line", tkn.line_number)
+                                    print("Error 13: expected statements at line", tkn.line_number)
                                     exit(2)
                             else:
-                                print("Error: expected #{ at line", tkn.line_number)
+                                print("Error 15: expected #{ at line", tkn.line_number)
                                 exit(2)
                         else:
-                            print("Error: expected : at line", tkn.line_number)
+                            print("Error 16: expected : at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ) at line", tkn.line_number)
+                        print("Error 17: expected ) at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected ( at line", tkn.line_number)
+                    print("Error 18: expected ( at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected id at line", tkn.line_number)
+                print("Error 19: expected id at line", tkn.line_number)
                 exit(2)
         else:
             return False
@@ -486,7 +486,7 @@ class syntax:
                     if tkn.recognized_string == ";":    # checking if the token's string is ;
                         return True
                     else:
-                        print("Error: expected ; at line", tkn.line_number)
+                        print("Error 20: expected ; at line", tkn.line_number)
                         exit(2)
                 elif tkn.recognized_string == "int":               # checking if the token's string is int
                     tkn = self.lex.next_token()
@@ -503,28 +503,28 @@ class syntax:
                                         if tkn.recognized_string == ";":                    # checking if the token's string is ;
                                             return True
                                         else:
-                                            print("Error: expected ; at line", tkn.line_number)
+                                            print("Error 21: expected ; at line", tkn.line_number)
                                             exit(2)
                                     else:
-                                        print("Error: expected ) at line", tkn.line_number)
+                                        print("Error 22: expected ) at line", tkn.line_number)
                                         exit(2)
                                 else:
-                                    print("Error: expected ) at line", tkn.line_number)
+                                    print("Error 23: expected ) at line", tkn.line_number)
                                     exit(2)
                             else:
-                                print("Error: expected ( at line", tkn.line_number)
+                                print("Error 24: expected ( at line", tkn.line_number)
                                 exit(2)
                         else:
-                            print("Error: expected the input keyword at line", tkn.line_number)
+                            print("Error 25: expected the input keyword at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ( at line", tkn.line_number)
+                        print("Error 26: expected ( at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected an expression or input method at line", tkn.line_number)
+                    print("Error 27: expected an expression or input method at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected = at line", tkn.line_number)
+                print("Error 28: expected = at line", tkn.line_number)
                 exit(2)
         else:
             return False
@@ -545,16 +545,16 @@ class syntax:
                         if tkn.recognized_string == ";":            # checking if the token's string is ;
                             return True
                         else:
-                            print("Error: expected ; at line", tkn.line_number)
+                            print("Error 29: expected ; at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ) at line", tkn.line_number)
+                        print("Error 30: expected ) at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected an expression at line", tkn.line_number)
+                    print("Error 31: expected an expression at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected ( at line", tkn.line_number)
+                print("Error 32: expected ( at line", tkn.line_number)
                 exit(2)
         else:
             return False
@@ -575,16 +575,16 @@ class syntax:
                         if tkn.recognized_string == ";":            # checking if the token's string is ;
                             return True
                         else:
-                            print("Error: expected ; at line", tkn.line_number)
+                            print("Error 33: expected ; at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ) at line", tkn.line_number)
+                        print("Error 34: expected ) at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected an expression at line", tkn.line_number)
+                    print("Error 35: expected an expression at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected ( at line", tkn.line_number)
+                print("Error 36: expected ( at line", tkn.line_number)
                 exit(2)
         else:
             return False
@@ -624,13 +624,13 @@ class syntax:
                                         tkn = self.lex.next_token()
                                         
                                     else:
-                                        print("Error: expected #} at line", tkn.line_number)
+                                        print("Error 37: expected #} at line", tkn.line_number)
                                         exit(2)
                                 else:
-                                    print("Error: expected statements at line", tkn.line_number)
+                                    print("Error 38: expected statements at line", tkn.line_number)
                                     exit(2)
                             else:
-                                print("Error: expected a statement or #{ at line", tkn.line_number)
+                                print("Error 39: expected a statement or #{ at line", tkn.line_number)
                                 exit(2)
 
 
@@ -648,13 +648,13 @@ class syntax:
                                         if tkn.recognized_string == "#}":           # checking if the token's string is #}
                                             return self.lex.next_token()
                                         else:
-                                            print("Error: expected #} at line", tkn.line_number)
+                                            print("Error 40: expected #} at line", tkn.line_number)
                                             exit(2)
                                     else:
-                                        print("Error: expected statements at line", tkn.line_number)
+                                        print("Error 41: expected statements at line", tkn.line_number)
                                         exit(2)
                                 else:
-                                    print("Error: expected a statement or #{ at line", tkn.line_number)
+                                    print("Error 42: expected a statement or #{ at line", tkn.line_number)
                                     exit(2)
 
                             else:
@@ -667,16 +667,16 @@ class syntax:
 
 
                         else:
-                            print("Error: expected : at line", tkn.line_number)
+                            print("Error 43: expected : at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ) at line", tkn.line_number)
+                        print("Error 44: expected ) at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected a condition at line", tkn.line_number)
+                    print("Error 45: expected a condition at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected ( at line", tkn.line_number)
+                print("Error 46: expected ( at line", tkn.line_number)
                 exit(2)
         else:
             return None
@@ -713,25 +713,25 @@ class syntax:
                                     if tkn.recognized_string == "#}":               # checking if the token's string is #}
                                         return self.lex.next_token()
                                     else:
-                                        print("Error: expected #} at line", tkn.line_number)
+                                        print("Error 47: expected #} at line", tkn.line_number)
                                         exit(2)
                                 else:
-                                    print("Error: expected statements at line", tkn.line_number)
+                                    print("Error 48: expected statements at line", tkn.line_number)
                                     exit(2)
                             else:
-                                print("Error: expected a statement or #{ at line", tkn.line_number)
+                                print("Error 49: expected a statement or #{ at line", tkn.line_number)
                                 exit(2)
                         else:
-                            print("Error: expected : at line", tkn.line_number)
+                            print("Error 50: expected : at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected ) at line", tkn.line_number)
+                        print("Error 51: expected ) at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected a condition at line", tkn.line_number)
+                    print("Error 52: expected a condition at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected ( at line", tkn.line_number)
+                print("Error 53: expected ( at line", tkn.line_number)
                 exit(2)
         else:
             return None
@@ -749,7 +749,7 @@ class syntax:
                 if tkn.family == "id":              # checking if the token's family is id
                     tkn = self.lex.next_token()
                 else:
-                    print("Error: expected an id at line", tkn.line_number)
+                    print("Error 54: expected an id at line", tkn.line_number)
                     exit(2)
             return tkn
         else:
@@ -778,11 +778,11 @@ class syntax:
                     if maybe_tkn:                                           # checking if it's a term
                         tkn = maybe_tkn
                     else:
-                        print("Error: expected a term at line", tkn.line_number)
+                        print("Error 55: expected a term at line", tkn.line_number)
                         exit(2)
                 return tkn
             else:
-                print("Error: expected a term at line", tkn.line_number)
+                print("Error 56: expected a term at line", tkn.line_number)
                 exit(2)
         else:
             return None
@@ -804,7 +804,7 @@ class syntax:
                 if maybe_tkn:                                   # checking if it's a factor
                     tkn = maybe_tkn
                 else:
-                    print("Error: expected a factor at line", tkn.line_number)
+                    print("Error 57: expected a factor at line", tkn.line_number)
                     exit(2)
             return tkn
         else:
@@ -826,10 +826,10 @@ class syntax:
                 if tkn.recognized_string == ")":                # checking if the token's string is )
                     return self.lex.next_token()
                 else:
-                    print("Error: expected ) at line", tkn.line_number)
+                    print("Error 58: expected ) at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected expression at line", tkn.line_number)
+                print("Error 59: expected expression at line", tkn.line_number)
                 exit(2)
             
         elif tkn.family == "id":                                # checking if the token's family is id
@@ -852,10 +852,10 @@ class syntax:
                 if tkn.recognized_string == ")":                    # checking if the token's string is )
                     return self.lex.next_token()
                 else:
-                    print("Error: expected ) at line", tkn.line_number)
+                    print("Error 60: expected ) at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected actual_par_list at line", tkn.line_number)
+                print("Error 61: expected actual_par_list at line", tkn.line_number)
                 exit(2)
         else:
             return tkn    
@@ -880,7 +880,7 @@ class syntax:
                 if maybe_tkn:              
                     tkn = maybe_tkn
                 else:
-                    print("Error: expected an expression at line", tkn.line_number)
+                    print("Error 62: expected an expression at line", tkn.line_number)
                     exit(2)
             return tkn
         else:
@@ -911,7 +911,7 @@ class syntax:
                 if maybe_tkn:
                     tkn=maybe_tkn
                 else:
-                    print("Error: expected a bool_factor at line", tkn.line_number)
+                    print("Error 63: expected a bool_factor at line", tkn.line_number)
                     exit(2)
             return tkn
         else:
@@ -932,7 +932,7 @@ class syntax:
                 if maybe_tkn:
                     tkn=maybe_tkn
                 else:
-                    print("Error: expected a bool_factor at line", tkn.line_number)
+                    print("Error 64: expected a bool_factor at line", tkn.line_number)
                     exit(2)
             return tkn
         else:
@@ -952,13 +952,13 @@ class syntax:
                     if tkn.recognized_string == "]":
                         return self.lex.next_token()
                     else:
-                        print("Error: expected ] at line", tkn.line_number)
+                        print("Error 65: expected ] at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected a condition at line", tkn.line_number)
+                    print("Error 66: expected a condition at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected [ at line", tkn.line_number)
+                print("Error 67: expected [ at line", tkn.line_number)
                 exit(2)
         elif tkn.recognized_string == "[":
             tkn=self.lex.next_token()
@@ -968,10 +968,10 @@ class syntax:
                 if tkn.recognized_string == "]":
                     return self.lex.next_token()
                 else:
-                    print("Error: expected ] at line", tkn.line_number)
+                    print("Error 68: expected ] at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected a condition at line", tkn.line_number)
+                print("Error 69: expected a condition at line", tkn.line_number)
                 exit(2)
         else:
             maybe_tkn=self.expression(tkn)                      #calling expression
@@ -983,10 +983,10 @@ class syntax:
                     if maybe_tkn:
                         return maybe_tkn
                     else:
-                        print("Error: expected an expression at line", tkn.line_number)
+                        print("Error 70: expected an expression at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected a relOperator at line", tkn.line_number)
+                    print("Error 71: expected a relOperator at line", tkn.line_number)
                     exit(2)
             else:
                 return None
@@ -1010,7 +1010,7 @@ class syntax:
 
 
                             if not self.main_function_call(tkn):                #making sure that the program has at least one main function
-                                print("Error: no main function call found at line", tkn.line_number)
+                                print("Error 72: no main function call found at line", tkn.line_number)
                                 exit(2)
 
                             tkn=self.lex.next_token()
@@ -1022,16 +1022,16 @@ class syntax:
         
 
                         else:
-                            print("Error: expected : at line", tkn.line_number)
+                            print("Error 73: expected : at line", tkn.line_number)
                             exit(2)
                     else:
-                        print("Error: expected \"__main__\" at line", tkn.line_number)
+                        print("Error 74: expected \"__main__\" at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected == at line", tkn.line_number)
+                    print("Error 75: expected == at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected __name__ at line", tkn.line_number)
+                print("Error 76: expected __name__ at line", tkn.line_number)
                 exit(2)
         else:
             return None
@@ -1053,13 +1053,13 @@ class syntax:
                     if tkn.recognized_string == ";":
                         return True
                     else:
-                        print("Error: expected ; at line", tkn.line_number)
+                        print("Error 77: expected ; at line", tkn.line_number)
                         exit(2)
                 else:
-                    print("Error: expected ) at line", tkn.line_number)
+                    print("Error 78: expected ) at line", tkn.line_number)
                     exit(2)
             else:
-                print("Error: expected ( at line", tkn.line_number)
+                print("Error 79: expected ( at line", tkn.line_number)
                 exit(2)
         else:
             return False
