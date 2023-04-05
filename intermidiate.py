@@ -8,6 +8,7 @@ import string
 import sys
 
 
+
 class Token:
 
     def __init__(self, family, recognized_string, line_number):
@@ -193,12 +194,86 @@ class Lex:
 
 
 
+#########################################################       intermidiate code       #########################################################
+
+  
+class quad:
+
+    def __init__(self, operator, op1, op2, op3):
+        self.operator = operator
+        self.op1 = op1
+        self.op2 = op2
+        self.op3 = op3
+
+    def __str__(self):
+        return str(self.operator) + " " + str(self.op1) + " " + str(self.op2) + " " + str(self.op3)
+
+
+class intermidiate_code:
+
+    def __init__(self):
+
+        self.quad_list = []
+        self.temp_counter = 0
+        self.label_counter = 0
+
+
+
+
+    def genQuad(self, operator, op1, op2, op3):
+
+        self.quad_list.append(quad(operator, op1, op2, op3))
+        self.label_counter += 1
+    
+
+    
+    def nextQuad(self):
+
+        return self.label_counter
+
+
+
+    def newTemp(self):
+
+        self.temp_counter += 1
+        return "%" + str(self.temp_counter-1)
+
+
+
+    def emptyList(self):                                                    #NOTE: MAYBE DELETE
+
+        return []
+
+
+
+    def makeList(self, label):
+
+        return [label]
+
+
+
+    def mergeList(self, list1, list2):
+
+        return list1 + list2
+
+
+
+    def backPatch(self, list, label):
+
+        for i in list:
+            self.quad_list[i].op3 = label
+            
+
+
+
+
+
+    
+
 
 
 
 ##########################################################      syntax      ##########################################################
-
-
 
 
 
