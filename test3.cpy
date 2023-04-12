@@ -19,12 +19,9 @@ def bigger_smaller_of_3():
           
         if  (    a   <  b    )    :
 
-            return (    a   )  ;
+            return (    a  );
 
-        else    :
-
-            return   (  b   )  ;
-    #}
+	#}
 
 
 
