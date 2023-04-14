@@ -844,66 +844,108 @@ class syntax:
 
 
 
-    def expression(self,tkn):
+    def expression(self,tkn):                                           #NOTE: done here
        
+        op1=""                                                          #
+
+        if(tkn=="-"):
+            op1="-"                                       
+        
         tkn = self.optional_sign(tkn)                                   # checking if it's an optional_sign
         
-        maybe_term = self.term(tkn)                                      # calling term
+        maybe_term = self.term(tkn)                                     # calling term
         maybe_tkn = maybe_term[0]
 
         if maybe_tkn:                                                   # checking if it's a term
             tkn = maybe_tkn
 
+            op1 += maybe_term[1]                                        # storing the term                                           
+
+
 
             while tkn.family == "addOperator":                          # checking if the token's family is addOperator
+
+                temp_op= tkn.recognized_string                         # storing the addOperator
+
                 tkn = self.lex.next_token()                             # calling next token before going inside any methods
-                maybe_tkn=self.term(tkn)                                # calling term
+                maybe_term = self.term(tkn)                             # calling term
+                maybe_tkn = maybe_term[0]
+
                 if maybe_tkn:                                           # checking if it's a term
+
+                    target = self.inter.newTemp()
+                    self.inter.genQuad(temp_op, op1, maybe_term[1], target) # generating quad
+                    op1 = target
+
                     tkn = maybe_tkn
                 else:
                     print("Error 53: expected a term at line", tkn.line_number)
                     exit(2)
-            return tkn
+
+
+
+            return [tkn,op1]
         else:
-            return None
+            return [None,None]
 
     
 
 
 
 
-    def term(self,tkn):
-            
-        maybe_tkn = self.factor(tkn)
-        if maybe_tkn:                                           # checking if it's a factor       
+    def term(self,tkn):                                         #NOTE: done here
+
+                                                      
+        maybe_factor = self.factor(tkn)
+        maybe_tkn = maybe_factor[0]
+             
+
+        if maybe_tkn:                                           # checking if it's a factor 
+
+            op1 = maybe_factor[1] 
+
             tkn = maybe_tkn
             while tkn.family == "mulOperator":                  # checking if the token's family is mulOperator
+                
+                temp_op= tkn.recognized_string                  # storing the mulOperator
+
                 tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                maybe_tkn = self.factor(tkn)
+                maybe_factor = self.factor(tkn)
+                maybe_tkn = maybe_factor[0]
+
                 if maybe_tkn:                                   # checking if it's a factor
+
+                    target = self.inter.newTemp()
+                    self.inter.genQuad(temp_op, op1, maybe_factor[1], target) # generating quad
+                    op1 = target
+
+
                     tkn = maybe_tkn
                 else:
                     print("Error 54: expected a factor at line", tkn.line_number)
                     exit(2)
-            return tkn
+            return [tkn,op1]
         else:
-            return None
+            return [None,None]
 
 
 
 
-    def factor(self,tkn):
+    def factor(self,tkn):       #returns list of [the next tkn, variable/number/temp_var]   #NOTE: done here
         
-        if tkn.family == "number":                              # checking if the token's family is number
-            return self.lex.next_token()
+        if tkn.family == "number":                                  # checking if the token's family is number
+            
+            return [self.lex.next_token(),tkn.recognized_string]    # returning the next token and the number
 
-        elif tkn.recognized_string == "(":                      # checking if the token's string is (
+        elif tkn.recognized_string == "(":                          # checking if the token's string is (
             tkn = self.lex.next_token()
-            maybe_tkn = self.expression(tkn)                    # calling expression
+            maybe_expression = self.expression(tkn)                        # calling expression
+            maybe_tkn = maybe_expression[0]
+
             if maybe_tkn:
                 tkn = maybe_tkn
-                if tkn.recognized_string == ")":                # checking if the token's string is )
-                    return self.lex.next_token()
+                if tkn.recognized_string == ")":                    # checking if the token's string is )
+                    return [self.lex.next_token(),maybe_expression[1]]
                 else:
                     print("Error 55: expected ) at line", tkn.line_number)
                     exit(2)
@@ -911,25 +953,35 @@ class syntax:
                 print("Error 56: expected expression at line", tkn.line_number)
                 exit(2)
             
-        elif tkn.family == "id":                                # checking if the token's family is id
+        elif tkn.family == "id":                                    # checking if the token's family is id
+            
+            the_id = tkn.recognized_string
             tkn = self.lex.next_token()
-            return self.idtail(tkn)
 
-        else:                                                   # if none of the above           
-            return None 
+            maybe_idtail= self.idtail(tkn)                            # calling idtail
+            if maybe_idtail[1] == None:
+                return [maybe_idtail[0],the_id]
+            
+
+            self.inter.genQuad("call",the_id,"_","_")            # generating quad
+            return maybe_idtail
+        else:                                                       # if none of the above           
+            return [None,None] 
 
 
 
 
-    def idtail(self,tkn):
+    def idtail(self,tkn):                                           #NOTE: done here
 
         if tkn.recognized_string == "(":                            # checking if the token's string is (
             tkn = self.lex.next_token()                             # calling next token before going inside any methods
-            maybe_tkn = self.actual_par_list(tkn)                   # calling actual_par_list
+            maybe_par_list = self.actual_par_list(tkn)              # calling actual_par_list
+            maybe_tkn = maybe_par_list[0]
+
             if maybe_tkn:                                           # if maybe_tkn is not None
                 tkn = maybe_tkn
                 if tkn.recognized_string == ")":                    # checking if the token's string is )
-                    return self.lex.next_token()
+                    return [self.lex.next_token(),maybe_par_list[1]]
                 else:
                     print("Error 57: expected ) at line", tkn.line_number)
                     exit(2)
@@ -937,33 +989,44 @@ class syntax:
                 print("Error 58: expected actual_par_list at line", tkn.line_number)
                 exit(2)
         else:
-            return tkn    
+            return [tkn,None]    
         
 
 
 
 
 
-    def actual_par_list(self,tkn):
+    def actual_par_list(self,tkn):                                          #NOTE: done here
 
 
-        maybe_tkn = self.expression(tkn)                            #calling expression
+        maybe_expression = self.expression(tkn)                            #calling expression
+        maybe_tkn = maybe_expression[0]
 
-
-        if maybe_tkn:                               
+        if maybe_tkn:
+            self.inter.genQuad("par",maybe_expression[1],"cv","_")               # generating quad                               
             tkn = maybe_tkn
             while tkn.recognized_string == ",":     
                 tkn = self.lex.next_token()    
 
-                maybe_tkn = self.expression(tkn)                     #calling expression     
+                maybe_expression = self.expression(tkn)                     #calling expression  
+                maybe_tkn = maybe_expression[0] 
+
                 if maybe_tkn:              
                     tkn = maybe_tkn
+                    self.inter.genQuad("par",maybe_expression[1],"cv","_")   # generating quad
                 else:
                     print("Error 59: expected an expression at line", tkn.line_number)
                     exit(2)
-            return tkn
+            
+            temp_var = self.inter.newTemp()
+            self.inter.genQuad("par",temp_var,"ret","_" )                   # generating quad with return value
+            return [tkn,temp_var]
         else:
-            return tkn
+
+            temp_var = self.inter.newTemp()
+            self.inter.genQuad("par",temp_var,"ret","_" )                   # generating quad with return value
+            
+            return [tkn,temp_var]
 
 
 
