@@ -552,7 +552,7 @@ class syntax:
 
 
 
-    def assignment_stat(self,tkn):
+    def assignment_stat(self, tkn):
 
         if tkn.family == "id":                          # checking if the token's family is id
             tkn = self.lex.next_token()
@@ -844,12 +844,12 @@ class syntax:
 
 
 
-    def expression(self,tkn):                                           #NOTE: done here
+    def expression(self, tkn):                                           #NOTE: done here
        
-        op1=""                                                          #
+        op1 = ""
 
-        if(tkn.recognized =="-"):
-            op1="-"                                       
+        if tkn.recognized_string == "-":
+            op1 = "-"
         
         tkn = self.optional_sign(tkn)                                   # checking if it's an optional_sign
         
@@ -865,7 +865,7 @@ class syntax:
 
             while tkn.family == "addOperator":                          # checking if the token's family is addOperator
 
-                temp_op= tkn.recognized_string                         # storing the addOperator
+                temp_op = tkn.recognized_string                         # storing the addOperator
 
                 tkn = self.lex.next_token()                             # calling next token before going inside any methods
                 maybe_term = self.term(tkn)                             # calling term
