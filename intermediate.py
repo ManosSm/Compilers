@@ -848,7 +848,7 @@ class syntax:
        
         op1=""                                                          #
 
-        if(tkn=="-"):
+        if(tkn.recognized =="-"):
             op1="-"                                       
         
         tkn = self.optional_sign(tkn)                                   # checking if it's an optional_sign
