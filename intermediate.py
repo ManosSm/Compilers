@@ -1312,8 +1312,9 @@ if  __name__ == '__main__':
     syn = syntax(file_name)
 
     syn.test_program()
-    for q in syn.inter.quad_list:
-        print(q)
+
+    for i,q in enumerate(syn.inter.quad_list):
+        print(i,":",q)
 
 
     #--------------------for testing the lex--------------------#

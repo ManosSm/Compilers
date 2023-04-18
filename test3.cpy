@@ -1,4 +1,4 @@
-def bigger_smaller_of_3():
+def main_bigger_smaller_of_3():
 #{
     #declare x
     #declare y
@@ -46,4 +46,4 @@ def bigger_smaller_of_3():
 
 if __name__ == "__main__":
     #$ call of main functions #$
-    bigger_smaller_of_3();
+    main_bigger_smaller_of_3();
