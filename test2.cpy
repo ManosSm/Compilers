@@ -9,7 +9,8 @@ def sum_100():
     #$ body of sum_100 #$
 
     x = 0;
-    y=100;
+    y = 100;
+    z = 0;
 
     while(x<y):
     #{

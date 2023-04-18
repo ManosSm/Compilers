@@ -258,7 +258,7 @@ class IntermediateCode:
 
 
 
-    def backPatch(self, list, label):
+    def backpatch(self, list, label):
 
         for i in list:
             self.quad_list[i].op3 = label
@@ -411,7 +411,7 @@ class syntax:
                                 tkn = self.declarations(tkn)                         #calling declarations                        
 
 
-                                while(self.def_function(tkn)):                      #calling def_function
+                                while self.def_function(tkn) :                      #calling def_function
 
                                     tkn = self.lex.next_token()
 
@@ -554,15 +554,18 @@ class syntax:
 
     def assignment_stat(self, tkn):
 
+        target = tkn.recognized_string
         if tkn.family == "id":                          # checking if the token's family is id
             tkn = self.lex.next_token()
             if tkn.recognized_string == "=":            # checking if the token's string is =
                 tkn = self.lex.next_token()
-                maybe_tkn = self.expression(tkn)        # calling expression
-
+                maybe_expression = self.expression(tkn)        # calling expression
+                maybe_tkn = maybe_expression[0]
                 if maybe_tkn:                           # checking if it's an expression and reads it
                     tkn = maybe_tkn
                     if tkn.recognized_string == ";":    # checking if the token's string is ;
+
+                        self.inter.genQuad("=", maybe_expression[1], "_", target)
                         return True
                     else:
                         print("Error 17: expected ; at line", tkn.line_number)
@@ -580,6 +583,9 @@ class syntax:
                                     if tkn.recognized_string == ")":                    # checking if the token's string is )
                                         tkn = self.lex.next_token()
                                         if tkn.recognized_string == ";":                    # checking if the token's string is ;
+
+                                            self.inter.genQuad("inp", target, "_", "_")         #generating the quad
+
                                             return True
                                         else:
                                             print("Error 18: expected ; at line", tkn.line_number)
@@ -616,12 +622,15 @@ class syntax:
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":                        # checking if the token's string is (
                 tkn = self.lex.next_token()
-                maybe_tkn = self.expression(tkn)                    # calling expression
-                if maybe_tkn:                                       # checking if it's an expression
+                maybe_expression = self.expression(tkn)  # calling expression
+                maybe_tkn = maybe_expression[0]
+                if maybe_tkn:  # checking if it's an expression
                     tkn = maybe_tkn
                     if tkn.recognized_string == ")":                # checking if the token's string is )
                         tkn = self.lex.next_token()
                         if tkn.recognized_string == ";":            # checking if the token's string is ;
+
+                            self.inter.genQuad("out", maybe_expression[1], "_", "_")
                             return True
                         else:
                             print("Error 26: expected ; at line", tkn.line_number)
@@ -646,12 +655,14 @@ class syntax:
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":                        # checking if the token's string is (
                 tkn = self.lex.next_token()
-                maybe_tkn = self.expression(tkn)                    # calling expression
+                maybe_expression = self.expression(tkn)                    # calling expression
+                maybe_tkn = maybe_expression[0]
                 if maybe_tkn:                                       # checking if it's an expression
                     tkn = maybe_tkn
                     if tkn.recognized_string == ")":                # checking if the token's string is )
                         tkn = self.lex.next_token()
                         if tkn.recognized_string == ";":            # checking if the token's string is ;
+                            self.inter.genQuad("ret",maybe_expression[1],"_","_")
                             return True
                         else:
                             print("Error 30: expected ; at line", tkn.line_number)
@@ -678,19 +689,20 @@ class syntax:
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":        # checking if the token's string is (
                 tkn = self.lex.next_token()             # calling next token before going inside any methods
-                maybe_tkn = self.condition(tkn)         # calling condition
+                maybe_condition = self.condition(tkn)         # calling condition
+                maybe_tkn = maybe_condition[0]
+
                 if maybe_tkn:                           # checking if it's a condition
                     tkn = maybe_tkn
                     if tkn.recognized_string == ")":        # checking if the token's string is )
                         tkn = self.lex.next_token()
                         if tkn.recognized_string == ":":        # checking if the token's string is :
 
-
-
+                            self.inter.backpatch(maybe_condition[1], self.inter.nextQuad())  # backpatching the true list with the next quad
 
 
                             tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                            maybe_tkn= self.statement(tkn)              # calling statement
+                            maybe_tkn = self.statement(tkn)              # calling statement
                             if maybe_tkn:                               # checking if it's a statement 
                                 tkn = maybe_tkn   
                                     
@@ -712,6 +724,9 @@ class syntax:
                                 print("Error 36: expected a statement or #{ at line", tkn.line_number)
                                 exit(2)
 
+                            ifList = self.inter.makeList(self.inter.nextQuad())  # making a list for the next quad
+                            self.inter.genQuad("jump", "_", "_", "_")  # generating quad for jump
+                            self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
 
                             if tkn.recognized_string == "else":         # checking if the token's string is else
                                 tkn = self.lex.next_token()
@@ -720,6 +735,7 @@ class syntax:
                                     maybe_tkn = self.statement(tkn)             # calling statement
 
                                     if maybe_tkn:                               # checking if it's a statement
+                                        self.inter.backpatch(ifList, self.inter.nextQuad())  # backpatching the if list with the next quad
                                         return maybe_tkn
                                     elif tkn.recognized_string == "#{":         # checking if the token's string is #{
                                         tkn = self.lex.next_token()                 # calling next token before going inside any methods
@@ -727,6 +743,7 @@ class syntax:
                                         if maybe_tkn:                               # checking if there are statements
                                             tkn = maybe_tkn
                                             if tkn.recognized_string == "#}":           # checking if the token's string is #}
+                                                self.inter.backpatch(ifList, self.inter.nextQuad())  # backpatching the if list with the next quad
                                                 return self.lex.next_token()
                                             else:
                                                 print("Error 37: expected #} at line", tkn.line_number)
@@ -774,17 +791,28 @@ class syntax:
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":            # checking if the token's string is (
                 tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                maybe_tkn = self.condition(tkn)             # calling condition
+
+                condQuad = self.inter.nextQuad()            # getting the next quad
+
+                maybe_condition = self.condition(tkn)             # calling condition
+                maybe_tkn = maybe_condition[0]
+
                 if maybe_tkn:                                   # checking if it's a condition                        
                     tkn = maybe_tkn
                     if tkn.recognized_string == ")":                # checking if the token's string is )
                         tkn = self.lex.next_token()
                         if tkn.recognized_string == ":":                # checking if the token's string is :
+
+                            self.inter.backpatch(maybe_condition[1], self.inter.nextQuad()) # backpatching the true list
                             
                             tkn = self.lex.next_token()                     # calling next token before going inside any methods
                             maybe_tkn = self.statement(tkn)                 # calling statement
 
                             if maybe_tkn:                                   # checking if it's a statement
+
+                                self.inter.genQuad("jump", "_", "_", condQuad) # generating quad for jump
+                                self.inter.backpatch(maybe_condition[2], self.inter.nextQuad()) # backpatching the false list
+
                                 return maybe_tkn
                             elif tkn.recognized_string == "#{":             # checking if the token's string is #{
                                 
@@ -794,6 +822,10 @@ class syntax:
 
                                     tkn = maybe_tkn
                                     if tkn.recognized_string == "#}":               # checking if the token's string is #}
+
+                                        self.inter.genQuad("jump", "_", "_", condQuad)  # generating quad for jump
+                                        self.inter.backpatch(maybe_condition[2], self.inter.nextQuad()) # backpatching the false list
+
                                         return self.lex.next_token()
                                     else:
                                         print("Error 45: expected #} at line", tkn.line_number)
@@ -907,7 +939,7 @@ class syntax:
             tkn = maybe_tkn
             while tkn.family == "mulOperator":                  # checking if the token's family is mulOperator
                 
-                temp_op= tkn.recognized_string                  # storing the mulOperator
+                temp_op = tkn.recognized_string                  # storing the mulOperator
 
                 tkn = self.lex.next_token()                     # calling next token before going inside any methods
                 maybe_factor = self.factor(tkn)
@@ -989,7 +1021,7 @@ class syntax:
                 print("Error 58: expected actual_par_list at line", tkn.line_number)
                 exit(2)
         else:
-            return [tkn,None]    
+            return [tkn,None]
         
 
 
@@ -1042,57 +1074,87 @@ class syntax:
     
 
 
-    def condition(self,tkn):
+    def condition(self,tkn):            #returns list of [the next tkn, condition_true, condition_false]   #NOTE: done here
         
-        maybe_tkn=self.bool_term(tkn)                             #calling bool_term
+        maybe_bool_term = self.bool_term(tkn)                             #calling bool_term
+        maybe_tkn = maybe_bool_term[0]
+
         if maybe_tkn:
-            tkn=maybe_tkn
-            while tkn.recognized_string == "or":                  # checking if the token's string is or
-                tkn=self.lex.next_token()
-                maybe_tkn=self.bool_term(tkn)                     #calling bool_term
+            condition_true = maybe_bool_term[1]
+            condition_false = maybe_bool_term[2]
+
+            tkn = maybe_tkn
+            while tkn.recognized_string == "or":                                # checking if the token's string is or
+
+                self.inter.backpatch(condition_false,self.inter.nextQuad())     # backpatching
+
+                tkn = self.lex.next_token()
+                maybe_bool_term = self.bool_term(tkn)                     #calling bool_term
+                maybe_tkn = maybe_bool_term[0]
+
                 if maybe_tkn:
-                    tkn=maybe_tkn
+                    condition_true = self.inter.mergeList(condition_true,maybe_bool_term[1])
+                    condition_false = maybe_bool_term[2]
+                    tkn = maybe_tkn
                 else:
                     print("Error 60: expected a bool_factor at line", tkn.line_number)
                     exit(2)
-            return tkn
+            return [tkn, condition_true, condition_false]
         else:
-            return None
+            return [None,None,None]
 
 
 
 
 
-    def bool_term(self,tkn):
+    def bool_term(self,tkn):    #return [tkn, true_list, false_list]            #NOTE: done here
         
-        maybe_tkn=self.bool_factor(tkn)                             #calling bool_factor
+        maybe_bool_factor = self.bool_factor(tkn)                             #calling bool_factor
+        maybe_tkn = maybe_bool_factor[0]
+
         if maybe_tkn:
-            tkn=maybe_tkn
+
+            bool_term_true = maybe_bool_factor[1]
+            bool_term_false = maybe_bool_factor[2]
+
+            tkn = maybe_tkn
             while tkn.recognized_string == "and":                   # checking if the token's string is and
-                tkn=self.lex.next_token()
-                maybe_tkn=self.bool_factor(tkn)                     #calling bool_factor
+
+                self.inter.backpatch(bool_term_true,self.inter.nextQuad())     # backpatching
+
+                tkn = self.lex.next_token()
+                maybe_bool_factor = self.bool_factor(tkn)                     #calling bool_factor
+                maybe_tkn = maybe_bool_factor[0]
                 if maybe_tkn:
-                    tkn=maybe_tkn
+                    bool_term_false = self.inter.mergeList(bool_term_false, maybe_bool_factor[2])
+                    bool_term_true = maybe_bool_factor[1]
+                    tkn = maybe_tkn
                 else:
                     print("Error 61: expected a bool_factor at line", tkn.line_number)
                     exit(2)
-            return tkn
+            return [tkn, bool_term_true, bool_term_false]
         else:
-            return None
+            return [None,None,None]
 
 
 
-    def bool_factor(self,tkn):
+    def bool_factor(self,tkn):  #returns [tkn, true_list, false_list]
+
 
         if tkn.recognized_string == "not":
-            tkn=self.lex.next_token()
+            tkn = self.lex.next_token()
             if tkn.recognized_string == "[":
-                tkn=self.lex.next_token()
-                maybe_tkn=self.condition(tkn)                   #calling condition
+                tkn = self.lex.next_token()
+                maybe_condition = self.condition(tkn)                   #calling condition
+                maybe_tkn = maybe_condition[0]
+
                 if maybe_tkn:
-                    tkn=maybe_tkn
+
+                    tkn = maybe_tkn
                     if tkn.recognized_string == "]":
-                        return self.lex.next_token()
+
+                        return [self.lex.next_token(),maybe_condition[2],maybe_condition[1]]
+
                     else:
                         print("Error 62: expected ] at line", tkn.line_number)
                         exit(2)
@@ -1103,12 +1165,13 @@ class syntax:
                 print("Error 64: expected [ at line", tkn.line_number)
                 exit(2)
         elif tkn.recognized_string == "[":
-            tkn=self.lex.next_token()
-            maybe_tkn=self.condition(tkn)                       #calling condition
+            tkn = self.lex.next_token()
+            maybe_condition = self.condition(tkn)                       #calling condition
+            maybe_tkn = maybe_condition[0]
             if maybe_tkn:
-                tkn=maybe_tkn
+                tkn = maybe_tkn
                 if tkn.recognized_string == "]":
-                    return self.lex.next_token()
+                    return [self.lex.next_token(), maybe_condition[1], maybe_condition[2]]
                 else:
                     print("Error 65: expected ] at line", tkn.line_number)
                     exit(2)
@@ -1116,14 +1179,23 @@ class syntax:
                 print("Error 66: expected a condition at line", tkn.line_number)
                 exit(2)
         else:
-            maybe_tkn=self.expression(tkn)                      #calling expression
+            maybe_expression1 = self.expression(tkn)                      #calling expression
+            maybe_tkn = maybe_expression1[0]
             if maybe_tkn:
-                tkn=maybe_tkn
-                if tkn.family == "relOperator":                 #checking if the token's family is relOperator
-                    tkn=self.lex.next_token()
-                    maybe_tkn=self.expression(tkn)              #calling expression
+                rel_op_tkn = maybe_tkn
+                if rel_op_tkn.family == "relOperator":                 #checking if the token's family is relOperator
+                    tkn = self.lex.next_token()
+                    maybe_expression2 = self.expression(tkn)              #calling expression
+                    maybe_tkn = maybe_expression2[0]
+
                     if maybe_tkn:
-                        return maybe_tkn
+
+                        bool_factor_true = self.inter.makeList(self.inter.nextQuad())
+                        self.inter.genQuad(rel_op_tkn.recognized_string,maybe_expression1[1],maybe_expression2[1],"_")
+                        bool_factor_false = self.inter.makeList(self.inter.nextQuad())
+                        self.inter.genQuad("jump", "_", "_", "_")
+
+                        return [maybe_tkn, bool_factor_true, bool_factor_false]
                     else:
                         print("Error 67: expected an expression at line", tkn.line_number)
                         exit(2)
@@ -1131,7 +1203,7 @@ class syntax:
                     print("Error 68: expected a relOperator at line", tkn.line_number)
                     exit(2)
             else:
-                return None
+                return [None,None,None]
 
 
 
@@ -1150,16 +1222,18 @@ class syntax:
                         if tkn.recognized_string == ":":
                             tkn = self.lex.next_token()
 
-
+                            self.inter.genQuad("begin_block", "main_program", "_", "_")
                             if not self.main_function_call(tkn):                #making sure that the program has at least one main function
                                 print("Error 69: no main function call found at line", tkn.line_number)
                                 exit(2)
 
                             tkn = self.lex.next_token()
 
-                            while(self.main_function_call(tkn)):                 #checking if there are more main  function calls
+                            while self.main_function_call(tkn):                 #checking if there are more main  function calls
                                 tkn = self.lex.next_token()
-                            
+
+                            self.inter.genQuad("halt", "_", "_", "_")
+                            self.inter.genQuad("end_block", "main_program", "_", "_")
                             return tkn
         
 
