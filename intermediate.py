@@ -725,10 +725,13 @@ class syntax:
                                 exit(2)
 
                             ifList = self.inter.makeList(self.inter.nextQuad())  # making a list for the next quad
-                            self.inter.genQuad("jump", "_", "_", "_")  # generating quad for jump
-                            self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
+                            #self.inter.genQuad("jump", "_", "_", "_")  # generating quad for jump
+                            #self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
 
                             if tkn.recognized_string == "else":         # checking if the token's string is else
+                                self.inter.genQuad("jump", "_", "_", "_")  # generating quad for jump
+                                self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
+
                                 tkn = self.lex.next_token()
                                 if tkn.recognized_string == ":":        # checking if the token's string is :
                                     tkn = self.lex.next_token()                 # calling next token before going inside any methods
@@ -758,6 +761,7 @@ class syntax:
                                     print("Error 40: expected : at line", tkn.line_number)
                                     exit(2)
                             else:
+                                self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
                                 return tkn
 
 
