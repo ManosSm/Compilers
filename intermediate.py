@@ -352,11 +352,16 @@ class syntax:
                                     tkn = self.lex.next_token()
 
                                 self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_")
-                                maybe_tkn = self.statements(tkn)                    #calling statements  
+
+                                maybe_statements = self.statements(tkn)                    #calling statements
+                                maybe_tkn = maybe_statements[0]
+                                #return_list = maybe_statements[1]
 
                                 if maybe_tkn:
                                     tkn = maybe_tkn
                                     if tkn.recognized_string == "#}":                         #checking if the token's string is #}
+
+                                        #self.inter.backpatch(return_list, self.inter.nextQuad())
                                         self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")
                                         return True
 
@@ -397,7 +402,7 @@ class syntax:
 
 
                     
-                    tkn=self.id_list(tkn)                                   #calling id_list                     
+                    tkn = self.id_list(tkn)                                   #calling id_list
 
                         
                     if tkn.recognized_string == ")":                        #checking if the token's string is )
@@ -416,7 +421,10 @@ class syntax:
                                     tkn = self.lex.next_token()
 
                                 self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_")
-                                maybe_tkn = self.statements(tkn)                    #calling statements
+
+                                maybe_statements = self.statements(tkn)                    #calling statements
+                                maybe_tkn = maybe_statements[0]
+                                return_list = maybe_statements[1]
 
                                 if maybe_tkn:                                       #if maybe_tkn is not None
                                     tkn = maybe_tkn
@@ -425,6 +433,14 @@ class syntax:
 
 
                                     if tkn.recognized_string == "#}":                    #checking if the token's string is #}
+
+                                       # if self.inter.quad_list[-1].operator == "jump":        #if the last quad is a jump quad
+                                        #    self.inter.quad_list.pop()
+                                        #    self.inter.label_counter -= 1
+                                       #     return_list.remove(self.inter.label_counter)
+
+
+                                        self.inter.backpatch(return_list, self.inter.nextQuad())    #backpatching the return_list
                                         self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")
                                         return True
                                     else:
@@ -488,15 +504,19 @@ class syntax:
 
 
 
-    def statement(self,tkn):                                                        
+    def statement(self,tkn):
 
-        if self.simple_statement(tkn):                              #calling simple_statement 
-            return self.lex.next_token()
+        maybe_statement = self.simple_statement(tkn)
+
+        if maybe_statement[0]:                                     #calling simple_statement
+            return [self.lex.next_token(), maybe_statement[1]]
         else:
-            maybe_tkn = self.structured_statement(tkn)              #calling structured_statement
+            maybe_structured_statement = self.structured_statement(tkn)              #calling structured_statement
+            maybe_tkn = maybe_structured_statement[0]
+
             if maybe_tkn:
-                return maybe_tkn
-            return None
+                return [maybe_tkn, maybe_structured_statement[1]]
+            return [None,[]]
         
 
 
@@ -504,20 +524,28 @@ class syntax:
 
     def statements(self,tkn):
 
-        maybe_tkn = self.statement(tkn)                         #calling statement      
+        maybe_statement = self.statement(tkn)                         #calling statement
+        maybe_tkn = maybe_statement[0]
+
         if not maybe_tkn:                                       #making sure there is at least one statement
-            return None
+            return [None, []]
 
         tkn = maybe_tkn
 
+        return_label_lst = maybe_statement[1]
+
         while(True):                                    #checking if there are more main  function calls
 
-            maybe_tkn = self.statement(tkn)                     #calling statement
-            
+            maybe_statement = self.statement(tkn)                     #calling statement
+
+            maybe_tkn = maybe_statement[0]
+
+            return_label_lst += maybe_statement[1]
+
             if maybe_tkn:                                       #if maybe_tkn is not None
                 tkn = maybe_tkn
             else:                                               #if maybe_tkn is None
-                return tkn
+                return [tkn, return_label_lst]                  #returning the token and the return_label_lst
 
         
 
@@ -528,27 +556,36 @@ class syntax:
         
     
         if self.assignment_stat(tkn):                     #calling assignment_stat 
-            return True
+            return [True, []]
         elif self.print_stat(tkn):                        #calling print_stat
-            return True
+            return [True, []]
         elif self.return_stat(tkn):                       #calling return_stat
-            return True
+
+            lbl = self.inter.nextQuad()
+            self.inter.genQuad("jump", "_", "_", "_")
+            return [True, [lbl]]
         else:
-            return False
+            return [False, []]
         
 
 
 
     def structured_statement(self,tkn):
-        
-        maybe_tkn = self.if_stat(tkn)                    #calling if_stat
+
+        maybe_if_stat = self.if_stat(tkn)                    #calling if_stat
+        maybe_tkn = maybe_if_stat[0]
+        return_list = maybe_if_stat[1]
+
         if maybe_tkn:                                    #if maybe_tkn is not None
-            return maybe_tkn
+            return [maybe_tkn, return_list]
         else:                                            #if maybe_tkn is None
-            maybe_tkn = self.while_stat(tkn)             #calling while_stat
+            maybe_while_stat = self.while_stat(tkn)             #calling while_stat
+            maybe_tkn = maybe_while_stat[0]
+            return_list += maybe_while_stat[1]
+
             if maybe_tkn:                                #if maybe_tkn is not None
-                return maybe_tkn
-            return  None
+                return [maybe_tkn, return_list]
+            return [None, []]                   #returning the token and the return_list
 
 
 
@@ -684,7 +721,9 @@ class syntax:
 
 
     def if_stat(self,tkn):
-           
+
+        return_list = []        # list for the return statements with the jump quad labels
+
         if tkn.recognized_string == "if":       # checking if the token's string is the keyword if
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":        # checking if the token's string is (
@@ -700,15 +739,22 @@ class syntax:
 
                             self.inter.backpatch(maybe_condition[1], self.inter.nextQuad())  # backpatching the true list with the next quad
 
-
                             tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                            maybe_tkn = self.statement(tkn)              # calling statement
-                            if maybe_tkn:                               # checking if it's a statement 
+
+                            maybe_statement = self.statement(tkn)              # calling statement
+                            maybe_tkn = maybe_statement[0]
+                            return_list += maybe_statement[1]           # adding the return statements with the jump quad labels to the list
+
+                            if maybe_tkn:                               # checking if it's a statement
                                 tkn = maybe_tkn   
                                     
                             elif tkn.recognized_string == "#{":         # checking if the token's string is #{
                                 tkn2 = self.lex.next_token()                # calling next token before going inside any methods
-                                maybe_tkn = self.statements(tkn2)           # calling statements
+
+                                maybe_statements = self.statements(tkn2)           # calling statements
+                                maybe_tkn = maybe_statements[0]
+                                return_list += maybe_statements[1]          # adding the return statements with the jump quad labels to the list
+
                                 if maybe_tkn:                               # checking if there are statements 
                                     tkn2 = maybe_tkn
                                     if tkn2.recognized_string == "#}":          # checking if the token's string is #}
@@ -735,19 +781,26 @@ class syntax:
                                 tkn = self.lex.next_token()
                                 if tkn.recognized_string == ":":        # checking if the token's string is :
                                     tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                                    maybe_tkn = self.statement(tkn)             # calling statement
+
+                                    maybe_statement = self.statement(tkn)             # calling statement
+                                    maybe_tkn = maybe_statement[0]
+                                    return_list += maybe_statement[1]           # adding the return statements with the jump quad labels to the list
 
                                     if maybe_tkn:                               # checking if it's a statement
                                         self.inter.backpatch(ifList, self.inter.nextQuad())  # backpatching the if list with the next quad
-                                        return maybe_tkn
+                                        return [maybe_tkn, return_list]
                                     elif tkn.recognized_string == "#{":         # checking if the token's string is #{
                                         tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                                        maybe_tkn = self.statements(tkn)            # calling statements
+
+                                        maybe_statements = self.statements(tkn)            # calling statements
+                                        maybe_tkn = maybe_statements[0]
+                                        return_list += maybe_statements[1]          # adding the return statements with the jump quad labels to the list
+
                                         if maybe_tkn:                               # checking if there are statements
                                             tkn = maybe_tkn
                                             if tkn.recognized_string == "#}":           # checking if the token's string is #}
                                                 self.inter.backpatch(ifList, self.inter.nextQuad())  # backpatching the if list with the next quad
-                                                return self.lex.next_token()
+                                                return [self.lex.next_token(), return_list]
                                             else:
                                                 print("Error 37: expected #} at line", tkn.line_number)
                                                 exit(2)
@@ -762,7 +815,7 @@ class syntax:
                                     exit(2)
                             else:
                                 self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
-                                return tkn
+                                return [tkn, return_list]
 
 
 
@@ -783,14 +836,14 @@ class syntax:
                 print("Error 44: expected ( at line", tkn.line_number)
                 exit(2)
         else:
-            return None
+            return [None, []]
 
 
 
 
 
-    def while_stat(self,tkn):                   
-        
+    def while_stat(self,tkn):
+
         if tkn.recognized_string == "while":        # checking if the token's string is the keyword while
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":            # checking if the token's string is (
@@ -810,18 +863,25 @@ class syntax:
                             self.inter.backpatch(maybe_condition[1], self.inter.nextQuad()) # backpatching the true list
                             
                             tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                            maybe_tkn = self.statement(tkn)                 # calling statement
+                            maybe_statement = self.statement(tkn)                 # calling statement
+                            maybe_tkn = maybe_statement[0]
+                            return_list = maybe_statement[1]           # adding the return statements with the jump quad labels to the list
+
 
                             if maybe_tkn:                                   # checking if it's a statement
 
                                 self.inter.genQuad("jump", "_", "_", condQuad) # generating quad for jump
                                 self.inter.backpatch(maybe_condition[2], self.inter.nextQuad()) # backpatching the false list
 
-                                return maybe_tkn
+                                return [maybe_tkn, return_list]
                             elif tkn.recognized_string == "#{":             # checking if the token's string is #{
                                 
                                 tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                                maybe_tkn = self.statements(tkn)                # calling statements
+
+                                maybe_statements = self.statements(tkn)                # calling statements
+                                maybe_tkn = maybe_statements[0]
+                                return_list += maybe_statements[1]          # adding the return statements with the jump quad labels to the list
+
                                 if maybe_tkn:                                   # checking if there are statements 
 
                                     tkn = maybe_tkn
@@ -830,7 +890,7 @@ class syntax:
                                         self.inter.genQuad("jump", "_", "_", condQuad)  # generating quad for jump
                                         self.inter.backpatch(maybe_condition[2], self.inter.nextQuad()) # backpatching the false list
 
-                                        return self.lex.next_token()
+                                        return [self.lex.next_token(), return_list]
                                     else:
                                         print("Error 45: expected #} at line", tkn.line_number)
                                         exit(2)
@@ -853,7 +913,7 @@ class syntax:
                 print("Error 51: expected ( at line", tkn.line_number)
                 exit(2)
         else:
-            return None
+            return [None, []]
 
 
 
