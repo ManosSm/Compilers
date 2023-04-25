@@ -10,7 +10,7 @@ import sys
 
 
 class Token:
-
+    #Α
     def __init__(self, family, recognized_string, line_number):
         self.family = family
         self.recognized_string = recognized_string
