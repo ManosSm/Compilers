@@ -11,7 +11,7 @@ def main_bigger_smaller_of_3():
         if (a>b):
             return (a);
         else:
-            return (b);  
+            return (bigger(b-1,a));  
     #}
 
     def smaller(a,b):

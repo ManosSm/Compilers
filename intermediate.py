@@ -264,10 +264,109 @@ class IntermediateCode:
             self.quad_list[i].op3 = label
             
 
+##########################################################      symbol table     ##########################################################
+
+class Entity:
+
+    def __init__(self,name):
+        self.name = name
+
+
+
+class Constant(Entity):
+
+    def __init__(self,name,data_type,value):
+        super().__init__(name)
+        self.data_type = data_type
+        self.value = value
+
+class Variable(Entity):
+    
+        def __init__(self,name,data_type,offset):
+            super().__init__(name)
+            self.data_type = data_type
+            self.offset = offset
+
+class FormalParameter(Entity):
+
+    def __init__(self,name,data_type,mode):
+        super().__init__(name)
+        self.data_type = data_type
+        self.mode = mode
+
+class Procedure(Entity):
+
+    def __init__(self,name,starting_quad, frame_length):
+        super().__init__(name)
+        self.starting_quad = starting_quad
+        self.frame_length = frame_length
+        self.formal_parameters = []
+
+
+    
+
+
+class TemporaryVariable(Variable):
+        
+    def __init__(self,name,data_type, offset):
+        super().__init__(name,data_type,offset)
+
+class parameter(FormalParameter):
+
+    def __init__(self,name,data_type,mode,offset):
+        super.__init__(self,name,data_type,mode)
+        self.offset = offset
+
+class function(Procedure):
+    
+        def __init__(self,name,data_type,starting_quad,frame_length):
+            super().__init__(name,starting_quad,frame_length)
+            self.data_type = data_type
 
 
 
 
+
+########################
+
+class Scope:
+
+    def __init__(self, level):
+        self.level = level
+        self.entity_list = []
+    
+    
+
+
+########################
+
+class SymbolTable:
+
+    def __init__(self):
+        self.scope_list = []
+    
+    def addEnity(self, entity):
+        self.scope_list[-1].entity_list.append(entity)
+
+    def addScope(self, scope):
+        self.scope_list.append(scope)
+       
+    def removeScope(self):
+        self.scope_list.pop()
+
+    def updateEntity(self, entity):                             #TODO
+       pass
+
+    def addFormalParameter(self, entity):
+        self.scope_list[-2].entity_list[-1].formal_parameters.append(entity)
+
+    def searchEntity(self, name):
+        for scope in reversed(self.scope_list):
+            for entity in reversed(scope.entity_list):
+                if entity.name == name:
+                    return entity
+        print("Error 77: entity", name, "not found")
+        exit(4)
     
 
 
@@ -284,6 +383,7 @@ class syntax:
         self.file_name = file_name
         self.lex = Lex(file_name)
         self.inter = IntermediateCode()
+        self.sym = SymbolTable()
 
 
     ###########################################################
@@ -343,7 +443,7 @@ class syntax:
                             tkn = self.lex.next_token()
                             if tkn.recognized_string == "#{":                     #checking if the token's string is #{
 
-
+                                
                                 tkn = self.lex.next_token()
 
                                 tkn = self.declarations(tkn)                        #calling declarations
@@ -395,7 +495,7 @@ class syntax:
                 if tkn.recognized_string == "(":                      #checking if the token's string is (
                     tkn = self.lex.next_token()
 
-
+                    
                     
                     tkn=self.id_list(tkn)                                   #calling id_list                     
 
