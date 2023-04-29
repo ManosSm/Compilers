@@ -268,39 +268,55 @@ class IntermediateCode:
 
 class Entity:
 
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
 
 
 
 class Constant(Entity):
 
-    def __init__(self,name,data_type,value):
+    def __init__(self, name, data_type, value):
         super().__init__(name)
         self.data_type = data_type
         self.value = value
 
+    def __str__(self):
+        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.value)
+
 class Variable(Entity):
     
-        def __init__(self,name,data_type,offset):
+        def __init__(self, name, data_type, offset):
             super().__init__(name)
             self.data_type = data_type
             self.offset = offset
 
+        def __str__(self):
+            return str(self.name) + "/" + str(self.data_type) + "/" + str(self.offset)
+
 class FormalParameter(Entity):
 
-    def __init__(self,name,data_type,mode):
+    def __init__(self, name, data_type, mode):
         super().__init__(name)
         self.data_type = data_type
         self.mode = mode
 
+    def __str__(self):
+        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.mode)
+
 class Procedure(Entity):
 
-    def __init__(self,name,starting_quad, frame_length):
+    def __init__(self, name):
         super().__init__(name)
-        self.starting_quad = starting_quad
-        self.frame_length = frame_length
+        self.starting_quad = None
+        self.frame_length = None
         self.formal_parameters = []
+
+    def __str__(self):
+        form_par_str = " ["
+        for i in self.formal_parameters:
+            form_par_str += str(i) + " | "
+        form_par_str += "\b\b\b] "
+        return str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str
 
 
     
@@ -308,20 +324,33 @@ class Procedure(Entity):
 
 class TemporaryVariable(Variable):
         
-    def __init__(self,name,data_type, offset):
-        super().__init__(name,data_type,offset)
+    def __init__(self, name, data_type, offset):
+        super().__init__(name, data_type, offset)
 
-class parameter(FormalParameter):
+    def __str__(self):
+        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.offset)
 
-    def __init__(self,name,data_type,mode,offset):
-        super.__init__(self,name,data_type,mode)
+class Parameter(FormalParameter):
+
+    def __init__(self, name, data_type, mode, offset):
+        super().__init__(name, data_type, mode)
         self.offset = offset
 
-class function(Procedure):
+    def __str__(self):
+        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.mode) + "/" + str(self.offset)
+
+class Function(Procedure):
     
-        def __init__(self,name,data_type,starting_quad,frame_length):
-            super().__init__(name,starting_quad,frame_length)
+        def __init__(self, name, data_type):
+            super().__init__(name)
             self.data_type = data_type
+
+        def __str__(self):
+            form_par_str = " ["
+            for i in self.formal_parameters:
+                form_par_str += str(i) + " | "
+            form_par_str += "\b\b\b] "
+            return str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str+ "/" + str(self.data_type)
 
 
 
@@ -334,6 +363,12 @@ class Scope:
     def __init__(self, level):
         self.level = level
         self.entity_list = []
+
+    def __str__(self):
+        ent_lst_str = ""
+        for entity_ in self.entity_list:
+            ent_lst_str += str(entity_) + "\t"
+        return str(self.level) + "/" + ent_lst_str
     
     
 
@@ -345,20 +380,32 @@ class SymbolTable:
     def __init__(self):
         self.scope_list = []
     
-    def addEnity(self, entity):
+    def addEntity(self, entity):
         self.scope_list[-1].entity_list.append(entity)
 
-    def addScope(self, scope):
+    def addScope(self):
+        scope = Scope(len(self.scope_list))
         self.scope_list.append(scope)
        
     def removeScope(self):
         self.scope_list.pop()
 
-    def updateEntity(self, entity):                             #TODO
-       pass
+    def updateField(self, code, next_quad):                             #TODO
+        count = 0
+        if code:
+            self.scope_list[-2].entity_list[-1].starting_quad = next_quad                                          #TODO: continue with frame length
+        else:
+            for entity_ in self.scope_list[-1].entity_list:
+                if isinstance(entity_, Procedure):
+                    continue
+                count += 1
 
-    def addFormalParameter(self, entity):
-        self.scope_list[-2].entity_list[-1].formal_parameters.append(entity)
+            self.scope_list[-2].entity_list[-1].frame_length = 12 + 4*count
+
+
+
+    def addFormalParameter(self, formal_parameter):
+        self.scope_list[-2].entity_list[-1].formal_parameters.append(formal_parameter)
 
     def searchEntity(self, name):
         for scope in reversed(self.scope_list):
@@ -369,6 +416,11 @@ class SymbolTable:
         exit(4)
     
 
+    def __str__(self):
+        str_ret = ""
+        for scope in self.scope_list:
+            str_ret += str(scope) + "\n"
+        return str_ret
 
 
 
@@ -416,6 +468,7 @@ class syntax:
 
     def def_main_part(self, tkn):                   
 
+        self.sym.addScope()                                 #adding a new scope to the symbol table
         if not self.def_main_function(tkn):                #making sure that the program has at least one main function 
            return None
 
@@ -424,6 +477,7 @@ class syntax:
         while(self.def_main_function(tkn)):
             tkn = self.lex.next_token()
 
+        self.sym.removeScope()                              #removing the scope from the symbol table
         return tkn
 
 
@@ -443,21 +497,45 @@ class syntax:
                             tkn = self.lex.next_token()
                             if tkn.recognized_string == "#{":                     #checking if the token's string is #{
 
-                                
+                                self.sym.addEntity(Procedure(tkn_func.recognized_string))
+
+                                self.sym.addScope()
                                 tkn = self.lex.next_token()
 
-                                tkn = self.declarations(tkn)                        #calling declarations
+
+
+                                decl_lines = self.declarations(tkn)  # calling declarations
+                                tkn = decl_lines[0]
+
+                                offset_count = 12
+                                for var_ in decl_lines[1]:  # for every variable in the list of declarations
+                                    self.sym.addEntity(Variable(var_, "int", offset_count))  # adding the variable to the symbol table
+                                    offset_count += 4
+
+
+
                                 
-                                while(self.def_function(tkn)):                      #calling def_function   
+                                while self.def_function(tkn):                      #calling def_function
                                     tkn = self.lex.next_token()
 
                                 self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_")
-                                maybe_tkn = self.statements(tkn)                    #calling statements  
+                                self.sym.updateField(True, self.inter.nextQuad())  # updating the field of the procedure in the symbol table
+                                maybe_tkn = self.statements(tkn)                    #calling statements
+
+
 
                                 if maybe_tkn:
                                     tkn = maybe_tkn
                                     if tkn.recognized_string == "#}":                         #checking if the token's string is #}
                                         self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")
+
+                                        print(self.sym)
+
+                                        self.sym.updateField(False, None)               # updating the field of the procedure in the symbol table
+                                        self.sym.removeScope()
+
+                                        print(self.sym)
+
                                         return True
 
                                     else:   
@@ -495,10 +573,19 @@ class syntax:
                 if tkn.recognized_string == "(":                      #checking if the token's string is (
                     tkn = self.lex.next_token()
 
-                    
-                    
-                    tkn=self.id_list(tkn)                                   #calling id_list                     
+                    self.sym.addEntity(Function(tkn_func.recognized_string, "int"))   #adding the function to the symbol table
+                    self.sym.addScope()                                 #creating a new scope
 
+                    ret_id_list = self.id_list(tkn)                                   #calling id_list
+                    tkn = ret_id_list[0]
+
+                    offset_count = 12
+                    for parameter in ret_id_list[1]:                                     #for every element in the list of id_list
+                        form_par = FormalParameter(parameter, "int", "cv")   #creating a new FormalParameter
+                        self.sym.addFormalParameter(form_par)                                     #adding the FormalParameter to the FormalParameter list of the function/procedure
+                        actual_par = Parameter(parameter, "int", "cv", offset_count)   #creating a new Parameter
+                        offset_count += 4
+                        self.sym.addEntity(actual_par)                                        #adding the FormalParameter to the symbol table
                         
                     if tkn.recognized_string == ")":                        #checking if the token's string is )
                         tkn = self.lex.next_token()
@@ -508,14 +595,19 @@ class syntax:
                                 tkn = self.lex.next_token()
                                 
 
-                                tkn = self.declarations(tkn)                         #calling declarations                        
+                                decl_lines = self.declarations(tkn)                         #calling declarations
+                                tkn = decl_lines[0]
 
+                                for var_ in decl_lines[1]:                                  #for every variable in the list of declarations
+                                    self.sym.addEntity(Variable(var_, "int", offset_count))   #adding the variable to the symbol table
+                                    offset_count += 4
 
-                                while self.def_function(tkn) :                      #calling def_function
+                                while self.def_function(tkn):                      #calling def_function
 
                                     tkn = self.lex.next_token()
 
                                 self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_")
+                                self.sym.updateField(True, self.inter.nextQuad())
                                 maybe_tkn = self.statements(tkn)                    #calling statements
 
                                 if maybe_tkn:                                       #if maybe_tkn is not None
@@ -526,6 +618,13 @@ class syntax:
 
                                     if tkn.recognized_string == "#}":                    #checking if the token's string is #}
                                         self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")
+
+                                        print(self.sym)
+
+                                        self.sym.updateField(False, None)
+                                        self.sym.removeScope()                          #removing the scope
+
+                                        print(self.sym)
                                         return True
                                     else:
                                         print("Error 10: expected #} at line", tkn.line_number)
@@ -557,33 +656,38 @@ class syntax:
 
 
 
-    def declarations(self,tkn):
+    def declarations(self,tkn):             #returns [token, [id_lists]]
 
-        while(True):
+        decl_ret = []
+        while True:
 
-            maybe_tkn = self.declaration_line(tkn)                  #calling declaration_line
+            decl_lst = self.declaration_line(tkn)                  #calling declaration_line
+
+            maybe_tkn = decl_lst[0]
+            decl_ret += decl_lst[1]
 
             if maybe_tkn:                                           #if maybe_tkn is not None
                 tkn = maybe_tkn
             else:                                                   #if maybe_tkn is None
-                return tkn
+                return [tkn, decl_ret]                              #returning the token and the list of id_list
 
 
 
 
-    def declaration_line(self,tkn):
+    def declaration_line(self,tkn):             #returns [token, [id_list]]
 
         if tkn.recognized_string == "#declare":                     #checking if the token's string is #declare
             tkn = self.lex.next_token()
-            maybe_tkn = self.id_list(tkn)                           #calling id_list
-           
-            if maybe_tkn:                                           #if maybe_tkn is not None
-                return maybe_tkn
+            ret_id_list = self.id_list(tkn)                           #calling id_list
+            maybe_tkn = ret_id_list[0]
+
+            if maybe_tkn:
+                return [maybe_tkn, ret_id_list[1]]
             else:                                                   #if maybe_tkn is None                      
-                return tkn
+                return [tkn, []]
 
         else:
-            return None                                             #returning None if the token's string is not #declare
+            return [None, []]                                             #returning None if the token's string is not #declare
 
 
 
@@ -960,18 +1064,21 @@ class syntax:
 
     def id_list(self,tkn):
 
-        if tkn.family == "id":                      # checking if the token's family is id
+        if tkn.family == "id":                                  # checking if the token's family is id
+            ret_id_list = []                                    # creating the list with the ids that will be returned
+            ret_id_list.append(tkn.recognized_string)           # adding the token's string to the list
             tkn = self.lex.next_token()
-            while tkn.recognized_string == ",":     # checking if the token's string is ,
-                tkn = self.lex.next_token()         # calling next token before going inside any methods
-                if tkn.family == "id":              # checking if the token's family is id
+            while tkn.recognized_string == ",":                 # checking if the token's string is ,
+                tkn = self.lex.next_token()                     # calling next token before going inside any methods
+                if tkn.family == "id":                          # checking if the token's family is id
+                    ret_id_list.append(tkn.recognized_string)   # adding the token's string to the list
                     tkn = self.lex.next_token()
                 else:
                     print("Error 52: expected an id at line", tkn.line_number)
                     exit(2)
-            return tkn
+            return [tkn, ret_id_list]
         else:
-            return tkn
+            return [tkn, []]
 
 
 
@@ -1012,6 +1119,16 @@ class syntax:
                     target = self.inter.newTemp()
                     self.inter.genQuad(temp_op, op1, maybe_term[1], target) # generating quad
                     op1 = target
+
+
+                    offset_ = 12
+                    for element in reversed(self.sym.scope_list[-1].entity_list):  # finding the offset of the last variable in the scope
+                        if not isinstance(element, Procedure):  # if it's not a procedure
+                            offset_ = element.offset + 4  # then add 4 to that offset
+                            break
+                    tmp = TemporaryVariable(target, "int", offset_)
+                    self.sym.addEntity(tmp)  # adding the temp_var to the symbol table
+
 
                     tkn = maybe_tkn
                 else:
@@ -1054,6 +1171,15 @@ class syntax:
                     target = self.inter.newTemp()
                     self.inter.genQuad(temp_op, op1, maybe_factor[1], target) # generating quad
                     op1 = target
+
+
+                    offset_ = 12
+                    for element in reversed(self.sym.scope_list[-1].entity_list):  # finding the offset of the last variable in the scope
+                        if not isinstance(element, Procedure):  # if it's not a procedure
+                            offset_ = element.offset + 4  # then add 4 to that offset
+                            break
+                    tmp = TemporaryVariable(target, "int", offset_)
+                    self.sym.addEntity(tmp)  # adding the temp_var to the symbol table
 
 
                     tkn = maybe_tkn
@@ -1155,13 +1281,35 @@ class syntax:
                     exit(2)
             
             temp_var = self.inter.newTemp()
-            self.inter.genQuad("par",temp_var,"ret","_" )                   # generating quad with return value
+            self.inter.genQuad("par", temp_var, "ret", "_")  # generating quad with return value
+
+
+            offset_ = 12
+            for element in reversed(
+                    self.sym.scope_list[-1].entity_list):  # finding the offset of the last variable in the scope
+                if not isinstance(element, Procedure):  # if it's not a procedure
+                    offset_ = element.offset + 4  # then add 4 to that offset
+                    break
+            tmp = TemporaryVariable(temp_var, "int", offset_)
+            self.sym.addEntity(tmp)  # adding the temp_var to the symbol table
+
+
             return [tkn,temp_var]
         else:
 
             temp_var = self.inter.newTemp()
-            self.inter.genQuad("par",temp_var,"ret","_" )                   # generating quad with return value
-            
+            self.inter.genQuad("par", temp_var, "ret", "_")  # generating quad with return value
+
+
+            offset_ = 12
+            for element in reversed(self.sym.scope_list[-1].entity_list):   # finding the offset of the last variable in the scope
+                if not isinstance(element, Procedure):                          # if it's not a procedure
+                    offset_ = element.offset + 4                                    # then add 4 to that offset
+                    break
+            tmp = TemporaryVariable(temp_var, "int", offset_)
+            self.sym.addEntity(tmp)                                         # adding the temp_var to the symbol table
+
+
             return [tkn,temp_var]
 
 
@@ -1417,8 +1565,13 @@ if  __name__ == '__main__':
 
     syn.test_program()
 
+    f = open("quads.inter", "w")
+
     for i,q in enumerate(syn.inter.quad_list):
         print(i,":",q)
+        f.write(q.__str__() + "\n")
+    f.close()
+
 
 
     #--------------------for testing the lex--------------------#
