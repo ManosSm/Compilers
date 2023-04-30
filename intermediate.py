@@ -390,10 +390,10 @@ class SymbolTable:
     def removeScope(self):
         self.scope_list.pop()
 
-    def updateField(self, code, next_quad):                             #TODO
+    def updateField(self, code, next_quad):
         count = 0
         if code:
-            self.scope_list[-2].entity_list[-1].starting_quad = next_quad                                          #TODO: continue with frame length
+            self.scope_list[-2].entity_list[-1].starting_quad = next_quad
         else:
             for entity_ in self.scope_list[-1].entity_list:
                 if isinstance(entity_, Procedure):
@@ -401,8 +401,6 @@ class SymbolTable:
                 count += 1
 
             self.scope_list[-2].entity_list[-1].frame_length = 12 + 4*count
-
-
 
     def addFormalParameter(self, formal_parameter):
         self.scope_list[-2].entity_list[-1].formal_parameters.append(formal_parameter)
@@ -469,7 +467,7 @@ class syntax:
     def def_main_part(self, tkn):                   
 
         self.sym.addScope()                                 #adding a new scope to the symbol table
-        if not self.def_main_function(tkn):                #making sure that the program has at least one main function 
+        if not self.def_main_function(tkn):                 #making sure that the program has at least one main function
            return None
 
         tkn = self.lex.next_token()
@@ -485,56 +483,56 @@ class syntax:
 
     def def_main_function(self,tkn):
 
-        if tkn.recognized_string == "def":                    #checking if the token's string is def
+        if tkn.recognized_string == "def":                      #checking if the token's string is def
             tkn_func = self.lex.next_token()
-            if tkn_func.family == "id":                                #checking if the token's family is id
+            if tkn_func.family == "id":                             #checking if the token's family is id
                 tkn = self.lex.next_token()
-                if tkn.recognized_string == "(":                      #checking if the token's string is (
+                if tkn.recognized_string == "(":                        #checking if the token's string is (
                     tkn = self.lex.next_token()
-                    if tkn.recognized_string == ")":                      #checking if the token's string is )
+                    if tkn.recognized_string == ")":                        #checking if the token's string is )
                         tkn = self.lex.next_token()
-                        if tkn.recognized_string == ":":                      #checking if the token's string is :
+                        if tkn.recognized_string == ":":                        #checking if the token's string is :
                             tkn = self.lex.next_token()
-                            if tkn.recognized_string == "#{":                     #checking if the token's string is #{
+                            if tkn.recognized_string == "#{":                       #checking if the token's string is #{
 
-                                self.sym.addEntity(Procedure(tkn_func.recognized_string))
+                                self.sym.addEntity(Procedure(tkn_func.recognized_string))               #adding the procedure to the symbol table
 
-                                self.sym.addScope()
+                                self.sym.addScope()                                                     #adding a new scope to the symbol table
                                 tkn = self.lex.next_token()
 
 
 
-                                decl_lines = self.declarations(tkn)  # calling declarations
+                                decl_lines = self.declarations(tkn)                                     # calling declarations
                                 tkn = decl_lines[0]
 
                                 offset_count = 12
-                                for var_ in decl_lines[1]:  # for every variable in the list of declarations
-                                    self.sym.addEntity(Variable(var_, "int", offset_count))  # adding the variable to the symbol table
+                                for var_ in decl_lines[1]:                                              # for every variable in the list of declarations
+                                    self.sym.addEntity(Variable(var_, "int", offset_count))             # adding the variable to the symbol table
                                     offset_count += 4
 
 
 
                                 
-                                while self.def_function(tkn):                      #calling def_function
+                                while self.def_function(tkn):                                           #calling def_function
                                     tkn = self.lex.next_token()
 
-                                self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_")
-                                self.sym.updateField(True, self.inter.nextQuad())  # updating the field of the procedure in the symbol table
-                                maybe_tkn = self.statements(tkn)                    #calling statements
+                                self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_") #generating the intermediate code for the begin block
+                                self.sym.updateField(True, self.inter.nextQuad())                       # updating the field of the main function in the symbol table
+                                maybe_tkn = self.statements(tkn)                                        #calling statements
 
 
 
                                 if maybe_tkn:
                                     tkn = maybe_tkn
-                                    if tkn.recognized_string == "#}":                         #checking if the token's string is #}
-                                        self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")
+                                    if tkn.recognized_string == "#}":                                       #checking if the token's string is #}
+                                        self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")   #generating the intermediate code for the end block
 
-                                        print(self.sym)
+                                        print(self.sym)                                                         #printing the symbol table
 
-                                        self.sym.updateField(False, None)               # updating the field of the procedure in the symbol table
-                                        self.sym.removeScope()
+                                        self.sym.updateField(False, None)                                       # updating the field of the procedure in the symbol table
+                                        self.sym.removeScope()                                                  #removing the scope from the symbol table
 
-                                        print(self.sym)
+                                        print(self.sym)                                                          #printing the symbol table
 
                                         return True
 
@@ -566,32 +564,32 @@ class syntax:
 
     def def_function(self,tkn):
         
-        if tkn.recognized_string == "def":                    #checking if the token's string is def
+        if tkn.recognized_string == "def":                                  #checking if the token's string is def
             tkn_func = self.lex.next_token()
-            if tkn_func.family =="id":                                #checking if the token's family is id
+            if tkn_func.family =="id":                                          #checking if the token's family is id
                 tkn = self.lex.next_token()
-                if tkn.recognized_string == "(":                      #checking if the token's string is (
+                if tkn.recognized_string == "(":                                    #checking if the token's string is (
                     tkn = self.lex.next_token()
 
-                    self.sym.addEntity(Function(tkn_func.recognized_string, "int"))   #adding the function to the symbol table
-                    self.sym.addScope()                                 #creating a new scope
+                    self.sym.addEntity(Function(tkn_func.recognized_string, "int")) #adding the function to the symbol table
+                    self.sym.addScope()                                             #creating a new scope
 
-                    ret_id_list = self.id_list(tkn)                                   #calling id_list
+                    ret_id_list = self.id_list(tkn)                                 #calling id_list
                     tkn = ret_id_list[0]
 
                     offset_count = 12
-                    for parameter in ret_id_list[1]:                                     #for every element in the list of id_list
-                        form_par = FormalParameter(parameter, "int", "cv")   #creating a new FormalParameter
-                        self.sym.addFormalParameter(form_par)                                     #adding the FormalParameter to the FormalParameter list of the function/procedure
-                        actual_par = Parameter(parameter, "int", "cv", offset_count)   #creating a new Parameter
+                    for parameter in ret_id_list[1]:                               #for every element in the list of id_list
+                        form_par = FormalParameter(parameter, "int", "cv")              #creating a new FormalParameter
+                        self.sym.addFormalParameter(form_par)                           #adding the FormalParameter to the FormalParameter list of the function/procedure
+                        actual_par = Parameter(parameter, "int", "cv", offset_count)    #creating a new Parameter
                         offset_count += 4
-                        self.sym.addEntity(actual_par)                                        #adding the FormalParameter to the symbol table
+                        self.sym.addEntity(actual_par)                                  #adding the FormalParameter to the symbol table
                         
                     if tkn.recognized_string == ")":                        #checking if the token's string is )
                         tkn = self.lex.next_token()
-                        if tkn.recognized_string == ":":                      #checking if the token's string is :
+                        if tkn.recognized_string == ":":                        #checking if the token's string is :
                             tkn = self.lex.next_token()
-                            if tkn.recognized_string == "#{":                     #checking if the token's string is #{
+                            if tkn.recognized_string == "#{":                       #checking if the token's string is #{
                                 tkn = self.lex.next_token()
                                 
 
@@ -599,32 +597,31 @@ class syntax:
                                 tkn = decl_lines[0]
 
                                 for var_ in decl_lines[1]:                                  #for every variable in the list of declarations
-                                    self.sym.addEntity(Variable(var_, "int", offset_count))   #adding the variable to the symbol table
+
+                                    self.sym.addEntity(Variable(var_, "int", offset_count)) #adding the variable to the symbol table
                                     offset_count += 4
 
-                                while self.def_function(tkn):                      #calling def_function
+                                while self.def_function(tkn):                               #calling def_function
 
                                     tkn = self.lex.next_token()
 
-                                self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_")
-                                self.sym.updateField(True, self.inter.nextQuad())
-                                maybe_tkn = self.statements(tkn)                    #calling statements
+                                self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_") #generating the intermediate code for the begin block
+                                self.sym.updateField(True, self.inter.nextQuad())                       # updating the starting quad field of the main function in the symbol table
+                                maybe_tkn = self.statements(tkn)                                        #calling statements
 
-                                if maybe_tkn:                                       #if maybe_tkn is not None
+                                if maybe_tkn:                                                           #if maybe_tkn is not None
                                     tkn = maybe_tkn
                                 
 
-
-
                                     if tkn.recognized_string == "#}":                    #checking if the token's string is #}
-                                        self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")
+                                        self.inter.genQuad("end_block", tkn_func.recognized_string, "_", "_")   #generating the intermediate code for the end block
 
                                         print(self.sym)
 
-                                        self.sym.updateField(False, None)
+                                        self.sym.updateField(False, None)               # updating the framelength field of the procedure in the symbol table
                                         self.sym.removeScope()                          #removing the scope
 
-                                        print(self.sym)
+                                        print(self.sym)                                 #printing the symbol table
                                         return True
                                     else:
                                         print("Error 10: expected #} at line", tkn.line_number)
@@ -678,16 +675,16 @@ class syntax:
 
         if tkn.recognized_string == "#declare":                     #checking if the token's string is #declare
             tkn = self.lex.next_token()
-            ret_id_list = self.id_list(tkn)                           #calling id_list
+            ret_id_list = self.id_list(tkn)                         #calling id_list
             maybe_tkn = ret_id_list[0]
 
             if maybe_tkn:
                 return [maybe_tkn, ret_id_list[1]]
-            else:                                                   #if maybe_tkn is None                      
+            else:                                                       #if maybe_tkn is None
                 return [tkn, []]
 
         else:
-            return [None, []]                                             #returning None if the token's string is not #declare
+            return [None, []]                                           #returning None if the token's string is not #declare
 
 
 
@@ -759,36 +756,36 @@ class syntax:
     def assignment_stat(self, tkn):
 
         target = tkn.recognized_string
-        if tkn.family == "id":                          # checking if the token's family is id
+        if tkn.family == "id":                                      # checking if the token's family is id
             tkn = self.lex.next_token()
-            if tkn.recognized_string == "=":            # checking if the token's string is =
+            if tkn.recognized_string == "=":                            # checking if the token's string is =
                 tkn = self.lex.next_token()
-                maybe_expression = self.expression(tkn)        # calling expression
+                maybe_expression = self.expression(tkn)                     # calling expression
                 maybe_tkn = maybe_expression[0]
-                if maybe_tkn:                           # checking if it's an expression and reads it
+                if maybe_tkn:                                               # checking if it's an expression and reads it
                     tkn = maybe_tkn
-                    if tkn.recognized_string == ";":    # checking if the token's string is ;
+                    if tkn.recognized_string == ";":                            # checking if the token's string is ;
 
-                        self.inter.genQuad("=", maybe_expression[1], "_", target)
+                        self.inter.genQuad("=", maybe_expression[1], "_", target)   # generating the intermediate code for the assignment statement
                         return True
                     else:
                         print("Error 17: expected ; at line", tkn.line_number)
                         exit(2)
-                elif tkn.recognized_string == "int":               # checking if the token's string is int
+                elif tkn.recognized_string == "int":                        # checking if the token's string is int
                     tkn = self.lex.next_token()
-                    if tkn.recognized_string == "(":                    # checking if the token's string is (
+                    if tkn.recognized_string == "(":                            # checking if the token's string is (
                         tkn = self.lex.next_token()
-                        if tkn.recognized_string == "input":                # checking if the token's string is input
+                        if tkn.recognized_string == "input":                        # checking if the token's string is input
                             tkn = self.lex.next_token()
-                            if tkn.recognized_string == "(":                    # checking if the token's string is (
+                            if tkn.recognized_string == "(":                            # checking if the token's string is (
                                 tkn = self.lex.next_token()
-                                if tkn.recognized_string == ")":                    # checking if the token's string is )
+                                if tkn.recognized_string == ")":                            # checking if the token's string is )
                                     tkn = self.lex.next_token()
-                                    if tkn.recognized_string == ")":                    # checking if the token's string is )
+                                    if tkn.recognized_string == ")":                            # checking if the token's string is )
                                         tkn = self.lex.next_token()
-                                        if tkn.recognized_string == ";":                    # checking if the token's string is ;
+                                        if tkn.recognized_string == ";":                            # checking if the token's string is ;
 
-                                            self.inter.genQuad("inp", target, "_", "_")         #generating the quad
+                                            self.inter.genQuad("inp", target, "_", "_")                 #generating the quad
 
                                             return True
                                         else:
@@ -824,17 +821,17 @@ class syntax:
     def print_stat(self,tkn):
         if tkn.recognized_string == "print":                        # checking if the token's string is the keyword print
             tkn = self.lex.next_token()
-            if tkn.recognized_string == "(":                        # checking if the token's string is (
+            if tkn.recognized_string == "(":                            # checking if the token's string is (
                 tkn = self.lex.next_token()
-                maybe_expression = self.expression(tkn)  # calling expression
+                maybe_expression = self.expression(tkn)                     # calling expression
                 maybe_tkn = maybe_expression[0]
-                if maybe_tkn:  # checking if it's an expression
+                if maybe_tkn:                                               # checking if it's an expression
                     tkn = maybe_tkn
-                    if tkn.recognized_string == ")":                # checking if the token's string is )
+                    if tkn.recognized_string == ")":                            # checking if the token's string is )
                         tkn = self.lex.next_token()
-                        if tkn.recognized_string == ";":            # checking if the token's string is ;
+                        if tkn.recognized_string == ";":                            # checking if the token's string is ;
 
-                            self.inter.genQuad("out", maybe_expression[1], "_", "_")
+                            self.inter.genQuad("out", maybe_expression[1], "_", "_")    # generating the intermediate code for the print statement
                             return True
                         else:
                             print("Error 26: expected ; at line", tkn.line_number)
@@ -857,16 +854,16 @@ class syntax:
         
         if tkn.recognized_string == "return":                       # checking if the token's string is the keyword return
             tkn = self.lex.next_token()
-            if tkn.recognized_string == "(":                        # checking if the token's string is (
+            if tkn.recognized_string == "(":                            # checking if the token's string is (
                 tkn = self.lex.next_token()
-                maybe_expression = self.expression(tkn)                    # calling expression
+                maybe_expression = self.expression(tkn)                     # calling expression
                 maybe_tkn = maybe_expression[0]
-                if maybe_tkn:                                       # checking if it's an expression
+                if maybe_tkn:                                               # checking if it's an expression
                     tkn = maybe_tkn
-                    if tkn.recognized_string == ")":                # checking if the token's string is )
+                    if tkn.recognized_string == ")":                            # checking if the token's string is )
                         tkn = self.lex.next_token()
-                        if tkn.recognized_string == ";":            # checking if the token's string is ;
-                            self.inter.genQuad("ret",maybe_expression[1],"_","_")
+                        if tkn.recognized_string == ";":                            # checking if the token's string is ;
+                            self.inter.genQuad("ret",maybe_expression[1],"_","_")   # generating the intermediate code for the return statement
                             return True
                         else:
                             print("Error 30: expected ; at line", tkn.line_number)
@@ -893,7 +890,7 @@ class syntax:
             tkn = self.lex.next_token()
             if tkn.recognized_string == "(":        # checking if the token's string is (
                 tkn = self.lex.next_token()             # calling next token before going inside any methods
-                maybe_condition = self.condition(tkn)         # calling condition
+                maybe_condition = self.condition(tkn)   # calling condition
                 maybe_tkn = maybe_condition[0]
 
                 if maybe_tkn:                           # checking if it's a condition
@@ -904,10 +901,9 @@ class syntax:
 
                             self.inter.backpatch(maybe_condition[1], self.inter.nextQuad())  # backpatching the true list with the next quad
 
-
-                            tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                            maybe_tkn = self.statement(tkn)              # calling statement
-                            if maybe_tkn:                               # checking if it's a statement 
+                            tkn = self.lex.next_token()             # calling next token before going inside any methods
+                            maybe_tkn = self.statement(tkn)         # calling statement
+                            if maybe_tkn:                           # checking if it's a statement
                                 tkn = maybe_tkn   
                                     
                             elif tkn.recognized_string == "#{":         # checking if the token's string is #{
@@ -928,29 +924,34 @@ class syntax:
                                 print("Error 36: expected a statement or #{ at line", tkn.line_number)
                                 exit(2)
 
-                            ifList = self.inter.makeList(self.inter.nextQuad())  # making a list for the next quad
-                            #self.inter.genQuad("jump", "_", "_", "_")  # generating quad for jump
-                            #self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
+                            ifList = self.inter.makeList(self.inter.nextQuad())                 # making a list for the next quad
 
-                            if tkn.recognized_string == "else":         # checking if the token's string is else
-                                self.inter.genQuad("jump", "_", "_", "_")  # generating quad for jump
-                                self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
+                            if tkn.recognized_string == "else":                                 # checking if the token's string is else
+
+                                self.inter.genQuad("jump", "_", "_", "_")                           # generating quad for jump
+                                self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())     # backpatching the false list with the next quad
 
                                 tkn = self.lex.next_token()
-                                if tkn.recognized_string == ":":        # checking if the token's string is :
-                                    tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                                    maybe_tkn = self.statement(tkn)             # calling statement
 
-                                    if maybe_tkn:                               # checking if it's a statement
-                                        self.inter.backpatch(ifList, self.inter.nextQuad())  # backpatching the if list with the next quad
+                                if tkn.recognized_string == ":":                                    # checking if the token's string is :
+                                    tkn = self.lex.next_token()                                     # calling next token before going inside any methods
+                                    maybe_tkn = self.statement(tkn)                                     # calling statement
+
+                                    if maybe_tkn:                                                       # checking if it's a statement
+                                        self.inter.backpatch(ifList, self.inter.nextQuad())                 # backpatching the if list with the next quad
                                         return maybe_tkn
-                                    elif tkn.recognized_string == "#{":         # checking if the token's string is #{
-                                        tkn = self.lex.next_token()                 # calling next token before going inside any methods
-                                        maybe_tkn = self.statements(tkn)            # calling statements
-                                        if maybe_tkn:                               # checking if there are statements
+
+                                    elif tkn.recognized_string == "#{":                                 # checking if the token's string is #{
+                                        tkn = self.lex.next_token()                                         # calling next token before going inside any methods
+                                        maybe_tkn = self.statements(tkn)                                    # calling statements
+
+                                        if maybe_tkn:                                                       # checking if there are statements
                                             tkn = maybe_tkn
-                                            if tkn.recognized_string == "#}":           # checking if the token's string is #}
-                                                self.inter.backpatch(ifList, self.inter.nextQuad())  # backpatching the if list with the next quad
+
+                                            if tkn.recognized_string == "#}":                                   # checking if the token's string is #}
+
+                                                self.inter.backpatch(ifList, self.inter.nextQuad())                 # backpatching the if list with the next quad
+
                                                 return self.lex.next_token()
                                             else:
                                                 print("Error 37: expected #} at line", tkn.line_number)
@@ -967,13 +968,6 @@ class syntax:
                             else:
                                 self.inter.backpatch(maybe_condition[2], self.inter.nextQuad())  # backpatching the false list with the next quad
                                 return tkn
-
-
-
-
-
-
-
                         else:
                             print("Error 41: expected : at line", tkn.line_number)
                             exit(2)
@@ -1002,36 +996,36 @@ class syntax:
 
                 condQuad = self.inter.nextQuad()            # getting the next quad
 
-                maybe_condition = self.condition(tkn)             # calling condition
+                maybe_condition = self.condition(tkn)       # calling condition
                 maybe_tkn = maybe_condition[0]
 
-                if maybe_tkn:                                   # checking if it's a condition                        
+                if maybe_tkn:                               # checking if it's a condition
                     tkn = maybe_tkn
-                    if tkn.recognized_string == ")":                # checking if the token's string is )
+                    if tkn.recognized_string == ")":            # checking if the token's string is )
                         tkn = self.lex.next_token()
-                        if tkn.recognized_string == ":":                # checking if the token's string is :
+                        if tkn.recognized_string == ":":            # checking if the token's string is :
 
                             self.inter.backpatch(maybe_condition[1], self.inter.nextQuad()) # backpatching the true list
                             
-                            tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                            maybe_tkn = self.statement(tkn)                 # calling statement
+                            tkn = self.lex.next_token()                             # calling next token before going inside any methods
+                            maybe_tkn = self.statement(tkn)                         # calling statement
 
-                            if maybe_tkn:                                   # checking if it's a statement
+                            if maybe_tkn:                                           # checking if it's a statement
 
-                                self.inter.genQuad("jump", "_", "_", condQuad) # generating quad for jump
+                                self.inter.genQuad("jump", "_", "_", condQuad)      # generating quad for jump
                                 self.inter.backpatch(maybe_condition[2], self.inter.nextQuad()) # backpatching the false list
 
                                 return maybe_tkn
-                            elif tkn.recognized_string == "#{":             # checking if the token's string is #{
+                            elif tkn.recognized_string == "#{":                     # checking if the token's string is #{
                                 
-                                tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                                maybe_tkn = self.statements(tkn)                # calling statements
-                                if maybe_tkn:                                   # checking if there are statements 
+                                tkn = self.lex.next_token()                             # calling next token before going inside any methods
+                                maybe_tkn = self.statements(tkn)                        # calling statements
+                                if maybe_tkn:                                           # checking if there are statements
 
                                     tkn = maybe_tkn
-                                    if tkn.recognized_string == "#}":               # checking if the token's string is #}
+                                    if tkn.recognized_string == "#}":                       # checking if the token's string is #}
 
-                                        self.inter.genQuad("jump", "_", "_", condQuad)  # generating quad for jump
+                                        self.inter.genQuad("jump", "_", "_", condQuad)          # generating quad for jump
                                         self.inter.backpatch(maybe_condition[2], self.inter.nextQuad()) # backpatching the false list
 
                                         return self.lex.next_token()
@@ -1065,13 +1059,13 @@ class syntax:
     def id_list(self,tkn):
 
         if tkn.family == "id":                                  # checking if the token's family is id
-            ret_id_list = []                                    # creating the list with the ids that will be returned
-            ret_id_list.append(tkn.recognized_string)           # adding the token's string to the list
+            ret_id_list = []                                        # creating the list with the ids that will be returned
+            ret_id_list.append(tkn.recognized_string)               # adding the token's string to the list
             tkn = self.lex.next_token()
-            while tkn.recognized_string == ",":                 # checking if the token's string is ,
-                tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                if tkn.family == "id":                          # checking if the token's family is id
-                    ret_id_list.append(tkn.recognized_string)   # adding the token's string to the list
+            while tkn.recognized_string == ",":                     # checking if the token's string is ,
+                tkn = self.lex.next_token()                             # calling next token before going inside any methods
+                if tkn.family == "id":                                  # checking if the token's family is id
+                    ret_id_list.append(tkn.recognized_string)               # adding the token's string to the list
                     tkn = self.lex.next_token()
                 else:
                     print("Error 52: expected an id at line", tkn.line_number)
@@ -1102,19 +1096,19 @@ class syntax:
         if maybe_tkn:                                                   # checking if it's a term
             tkn = maybe_tkn
 
-            op1 += maybe_term[1]                                        # storing the term                                           
+            op1 += maybe_term[1]                                            # storing the term
 
 
 
             while tkn.family == "addOperator":                          # checking if the token's family is addOperator
 
-                temp_op = tkn.recognized_string                         # storing the addOperator
+                temp_op = tkn.recognized_string                             # storing the addOperator
 
-                tkn = self.lex.next_token()                             # calling next token before going inside any methods
-                maybe_term = self.term(tkn)                             # calling term
+                tkn = self.lex.next_token()                                 # calling next token before going inside any methods
+                maybe_term = self.term(tkn)                                 # calling term
                 maybe_tkn = maybe_term[0]
 
-                if maybe_tkn:                                           # checking if it's a term
+                if maybe_tkn:                                               # checking if it's a term
 
                     target = self.inter.newTemp()
                     self.inter.genQuad(temp_op, op1, maybe_term[1], target) # generating quad
@@ -1123,11 +1117,11 @@ class syntax:
 
                     offset_ = 12
                     for element in reversed(self.sym.scope_list[-1].entity_list):  # finding the offset of the last variable in the scope
-                        if not isinstance(element, Procedure):  # if it's not a procedure
-                            offset_ = element.offset + 4  # then add 4 to that offset
+                        if not isinstance(element, Procedure):                          # if it's not a procedure
+                            offset_ = element.offset + 4                                    # then add 4 to that offset
                             break
-                    tmp = TemporaryVariable(target, "int", offset_)
-                    self.sym.addEntity(tmp)  # adding the temp_var to the symbol table
+                    tmp = TemporaryVariable(target, "int", offset_)                     # creating a temporary variable
+                    self.sym.addEntity(tmp)                                             # adding the temp_var to the symbol table
 
 
                     tkn = maybe_tkn
@@ -1149,7 +1143,7 @@ class syntax:
     def term(self,tkn):                                         #NOTE: done here
 
                                                       
-        maybe_factor = self.factor(tkn)
+        maybe_factor = self.factor(tkn)                         # calling factor
         maybe_tkn = maybe_factor[0]
              
 
@@ -1158,28 +1152,28 @@ class syntax:
             op1 = maybe_factor[1] 
 
             tkn = maybe_tkn
-            while tkn.family == "mulOperator":                  # checking if the token's family is mulOperator
+            while tkn.family == "mulOperator":                      # checking if the token's family is mulOperator
                 
-                temp_op = tkn.recognized_string                  # storing the mulOperator
+                temp_op = tkn.recognized_string                         # storing the mulOperator
 
-                tkn = self.lex.next_token()                     # calling next token before going inside any methods
-                maybe_factor = self.factor(tkn)
+                tkn = self.lex.next_token()                             # calling next token before going inside any methods
+                maybe_factor = self.factor(tkn)                         # calling factor
                 maybe_tkn = maybe_factor[0]
 
-                if maybe_tkn:                                   # checking if it's a factor
+                if maybe_tkn:                                           # checking if it's a factor
 
-                    target = self.inter.newTemp()
-                    self.inter.genQuad(temp_op, op1, maybe_factor[1], target) # generating quad
+                    target = self.inter.newTemp()                                   # creating a temporary variable
+                    self.inter.genQuad(temp_op, op1, maybe_factor[1], target)       # generating quad
                     op1 = target
 
 
                     offset_ = 12
-                    for element in reversed(self.sym.scope_list[-1].entity_list):  # finding the offset of the last variable in the scope
-                        if not isinstance(element, Procedure):  # if it's not a procedure
-                            offset_ = element.offset + 4  # then add 4 to that offset
+                    for element in reversed(self.sym.scope_list[-1].entity_list):   # finding the offset of the last variable in the scope
+                        if not isinstance(element, Procedure):                          # if it's not a procedure
+                            offset_ = element.offset + 4                                # then add 4 to that offset
                             break
-                    tmp = TemporaryVariable(target, "int", offset_)
-                    self.sym.addEntity(tmp)  # adding the temp_var to the symbol table
+                    tmp = TemporaryVariable(target, "int", offset_)                 # creating a temporary variable
+                    self.sym.addEntity(tmp)                                         # adding the temp_var to the symbol table
 
 
                     tkn = maybe_tkn
@@ -1193,11 +1187,11 @@ class syntax:
 
 
 
-    def factor(self,tkn):       #returns list of [the next tkn, variable/number/temp_var]   #NOTE: done here
+    def factor(self,tkn):       #returns list of [the next tkn, variable/number/temp_var]
         
         if tkn.family == "number":                                  # checking if the token's family is number
             
-            return [self.lex.next_token(),tkn.recognized_string]    # returning the next token and the number
+            return [self.lex.next_token(),tkn.recognized_string]        # returning the next token and the number
 
         elif tkn.recognized_string == "(":                          # checking if the token's string is (
             tkn = self.lex.next_token()
@@ -1206,7 +1200,7 @@ class syntax:
 
             if maybe_tkn:
                 tkn = maybe_tkn
-                if tkn.recognized_string == ")":                    # checking if the token's string is )
+                if tkn.recognized_string == ")":                                # checking if the token's string is )
                     return [self.lex.next_token(),maybe_expression[1]]
                 else:
                     print("Error 55: expected ) at line", tkn.line_number)
@@ -1220,12 +1214,12 @@ class syntax:
             the_id = tkn.recognized_string
             tkn = self.lex.next_token()
 
-            maybe_idtail= self.idtail(tkn)                            # calling idtail
+            maybe_idtail= self.idtail(tkn)                          # calling idtail
             if maybe_idtail[1] == None:
                 return [maybe_idtail[0],the_id]
             
 
-            self.inter.genQuad("call",the_id,"_","_")            # generating quad
+            self.inter.genQuad("call",the_id,"_","_")               # generating quad
             return maybe_idtail
         else:                                                       # if none of the above           
             return [None,None] 
@@ -1236,13 +1230,13 @@ class syntax:
     def idtail(self,tkn):                                           #NOTE: done here
 
         if tkn.recognized_string == "(":                            # checking if the token's string is (
-            tkn = self.lex.next_token()                             # calling next token before going inside any methods
-            maybe_par_list = self.actual_par_list(tkn)              # calling actual_par_list
+            tkn = self.lex.next_token()                                 # calling next token before going inside any methods
+            maybe_par_list = self.actual_par_list(tkn)                  # calling actual_par_list
             maybe_tkn = maybe_par_list[0]
 
-            if maybe_tkn:                                           # if maybe_tkn is not None
+            if maybe_tkn:                                               # if maybe_tkn is not None
                 tkn = maybe_tkn
-                if tkn.recognized_string == ")":                    # checking if the token's string is )
+                if tkn.recognized_string == ")":                            # checking if the token's string is )
                     return [self.lex.next_token(),maybe_par_list[1]]
                 else:
                     print("Error 57: expected ) at line", tkn.line_number)
@@ -1258,47 +1252,46 @@ class syntax:
 
 
 
-    def actual_par_list(self,tkn):                                          #NOTE: done here
+    def actual_par_list(self,tkn):
 
 
-        maybe_expression = self.expression(tkn)                            #calling expression
+        maybe_expression = self.expression(tkn)                             #calling expression
         maybe_tkn = maybe_expression[0]
 
         if maybe_tkn:
-            self.inter.genQuad("par",maybe_expression[1],"cv","_")               # generating quad                               
+            self.inter.genQuad("par",maybe_expression[1],"cv","_")              # generating quad
             tkn = maybe_tkn
             while tkn.recognized_string == ",":     
                 tkn = self.lex.next_token()    
 
-                maybe_expression = self.expression(tkn)                     #calling expression  
+                maybe_expression = self.expression(tkn)                             #calling expression
                 maybe_tkn = maybe_expression[0] 
 
                 if maybe_tkn:              
                     tkn = maybe_tkn
-                    self.inter.genQuad("par",maybe_expression[1],"cv","_")   # generating quad
+                    self.inter.genQuad("par",maybe_expression[1],"cv","_")              # generating quad
                 else:
                     print("Error 59: expected an expression at line", tkn.line_number)
                     exit(2)
             
-            temp_var = self.inter.newTemp()
-            self.inter.genQuad("par", temp_var, "ret", "_")  # generating quad with return value
+            temp_var = self.inter.newTemp()                                     # creating a temporary variable
+            self.inter.genQuad("par", temp_var, "ret", "_")                     # generating quad with return value
 
 
             offset_ = 12
-            for element in reversed(
-                    self.sym.scope_list[-1].entity_list):  # finding the offset of the last variable in the scope
-                if not isinstance(element, Procedure):  # if it's not a procedure
-                    offset_ = element.offset + 4  # then add 4 to that offset
+            for element in reversed(self.sym.scope_list[-1].entity_list):           # finding the offset of the last variable in the scope
+                if not isinstance(element, Procedure):                                  # if it's not a procedure
+                    offset_ = element.offset + 4                                            # then add 4 to that offset
                     break
-            tmp = TemporaryVariable(temp_var, "int", offset_)
-            self.sym.addEntity(tmp)  # adding the temp_var to the symbol table
+            tmp = TemporaryVariable(temp_var, "int", offset_)                       # creating a temporary variable
+            self.sym.addEntity(tmp)                                                 # adding the temp_var to the symbol table
 
 
             return [tkn,temp_var]
         else:
 
-            temp_var = self.inter.newTemp()
-            self.inter.genQuad("par", temp_var, "ret", "_")  # generating quad with return value
+            temp_var = self.inter.newTemp()                     # creating a temporary variable
+            self.inter.genQuad("par", temp_var, "ret", "_")     # generating quad with return value
 
 
             offset_ = 12
@@ -1306,7 +1299,7 @@ class syntax:
                 if not isinstance(element, Procedure):                          # if it's not a procedure
                     offset_ = element.offset + 4                                    # then add 4 to that offset
                     break
-            tmp = TemporaryVariable(temp_var, "int", offset_)
+            tmp = TemporaryVariable(temp_var, "int", offset_)               # creating a temporary variable
             self.sym.addEntity(tmp)                                         # adding the temp_var to the symbol table
 
 
@@ -1326,7 +1319,7 @@ class syntax:
     
 
 
-    def condition(self,tkn):            #returns list of [the next tkn, condition_true, condition_false]   #NOTE: done here
+    def condition(self,tkn):            #returns list of [the next tkn, condition_true, condition_false]
         
         maybe_bool_term = self.bool_term(tkn)                             #calling bool_term
         maybe_tkn = maybe_bool_term[0]
@@ -1338,16 +1331,17 @@ class syntax:
             tkn = maybe_tkn
             while tkn.recognized_string == "or":                                # checking if the token's string is or
 
-                self.inter.backpatch(condition_false,self.inter.nextQuad())     # backpatching
+                self.inter.backpatch(condition_false,self.inter.nextQuad())         # backpatching
 
                 tkn = self.lex.next_token()
-                maybe_bool_term = self.bool_term(tkn)                     #calling bool_term
+                maybe_bool_term = self.bool_term(tkn)                               #calling bool_term
                 maybe_tkn = maybe_bool_term[0]
 
                 if maybe_tkn:
                     condition_true = self.inter.mergeList(condition_true,maybe_bool_term[1])
                     condition_false = maybe_bool_term[2]
                     tkn = maybe_tkn
+
                 else:
                     print("Error 60: expected a bool_factor at line", tkn.line_number)
                     exit(2)
@@ -1359,7 +1353,7 @@ class syntax:
 
 
 
-    def bool_term(self,tkn):    #return [tkn, true_list, false_list]            #NOTE: done here
+    def bool_term(self,tkn):    #return [tkn, true_list, false_list]
         
         maybe_bool_factor = self.bool_factor(tkn)                             #calling bool_factor
         maybe_tkn = maybe_bool_factor[0]
@@ -1375,7 +1369,7 @@ class syntax:
                 self.inter.backpatch(bool_term_true,self.inter.nextQuad())     # backpatching
 
                 tkn = self.lex.next_token()
-                maybe_bool_factor = self.bool_factor(tkn)                     #calling bool_factor
+                maybe_bool_factor = self.bool_factor(tkn)                       #calling bool_factor
                 maybe_tkn = maybe_bool_factor[0]
                 if maybe_tkn:
                     bool_term_false = self.inter.mergeList(bool_term_false, maybe_bool_factor[2])
@@ -1431,21 +1425,21 @@ class syntax:
                 print("Error 66: expected a condition at line", tkn.line_number)
                 exit(2)
         else:
-            maybe_expression1 = self.expression(tkn)                      #calling expression
+            maybe_expression1 = self.expression(tkn)                    #calling expression
             maybe_tkn = maybe_expression1[0]
             if maybe_tkn:
                 rel_op_tkn = maybe_tkn
-                if rel_op_tkn.family == "relOperator":                 #checking if the token's family is relOperator
+                if rel_op_tkn.family == "relOperator":                      #checking if the token's family is relOperator
                     tkn = self.lex.next_token()
-                    maybe_expression2 = self.expression(tkn)              #calling expression
+                    maybe_expression2 = self.expression(tkn)                    #calling expression
                     maybe_tkn = maybe_expression2[0]
 
                     if maybe_tkn:
 
                         bool_factor_true = self.inter.makeList(self.inter.nextQuad())
-                        self.inter.genQuad(rel_op_tkn.recognized_string,maybe_expression1[1],maybe_expression2[1],"_")
+                        self.inter.genQuad(rel_op_tkn.recognized_string,maybe_expression1[1],maybe_expression2[1],"_")  #generating quad
                         bool_factor_false = self.inter.makeList(self.inter.nextQuad())
-                        self.inter.genQuad("jump", "_", "_", "_")
+                        self.inter.genQuad("jump", "_", "_", "_")                                                       #generating quad
 
                         return [maybe_tkn, bool_factor_true, bool_factor_false]
                     else:
@@ -1474,18 +1468,18 @@ class syntax:
                         if tkn.recognized_string == ":":
                             tkn = self.lex.next_token()
 
-                            self.inter.genQuad("begin_block", "main_program", "_", "_")
-                            if not self.main_function_call(tkn):                #making sure that the program has at least one main function
+                            self.inter.genQuad("begin_block", "main_program", "_", "_")     #generating quad
+                            if not self.main_function_call(tkn):                            #making sure that the program has at least one main function
                                 print("Error 69: no main function call found at line", tkn.line_number)
                                 exit(2)
 
                             tkn = self.lex.next_token()
 
-                            while self.main_function_call(tkn):                 #checking if there are more main  function calls
+                            while self.main_function_call(tkn):                             #checking if there are more main  function calls
                                 tkn = self.lex.next_token()
 
-                            self.inter.genQuad("halt", "_", "_", "_")
-                            self.inter.genQuad("end_block", "main_program", "_", "_")
+                            self.inter.genQuad("halt", "_", "_", "_")                       #generating quad
+                            self.inter.genQuad("end_block", "main_program", "_", "_")       #generating quad
                             return tkn
         
 
@@ -1512,14 +1506,14 @@ class syntax:
 
     def main_function_call(self, tkn_func):
 
-        if tkn_func.family == "id":                                  # checking if the token's family is id
+        if tkn_func.family == "id":                             # checking if the token's family is id
             tkn = self.lex.next_token()
-            if tkn.recognized_string == "(":                    # checking if the token's string is (
+            if tkn.recognized_string == "(":                        # checking if the token's string is (
                 tkn = self.lex.next_token()
-                if tkn.recognized_string == ")":                # checking if the token's string is )
+                if tkn.recognized_string == ")":                        # checking if the token's string is )
                     tkn = self.lex.next_token()
                     if tkn.recognized_string == ";":
-                        self.inter.genQuad("call", tkn_func.recognized_string, "_", "_")
+                        self.inter.genQuad("call", tkn_func.recognized_string, "_", "_")    #generating quad
                         return True
                     else:
                         print("Error 74: expected ; at line", tkn.line_number)
@@ -1565,7 +1559,7 @@ if  __name__ == '__main__':
 
     syn.test_program()
 
-    f = open("quads.inter", "w")
+    f = open("quads.int", "w")
 
     for i,q in enumerate(syn.inter.quad_list):
         print(i,":",q)
@@ -1575,7 +1569,7 @@ if  __name__ == '__main__':
 
 
     #--------------------for testing the lex--------------------#
-    #lex = Lex("test.txt")
+    #lex = Lex("test1.txt")
     #for i in range(100):
 
         #tnk=lex.next_token()
