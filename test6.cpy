@@ -12,7 +12,7 @@ def main_add_4_NuMBerS():
 
     def add_2_numbers():
     #{
-        return (1+1);
+        x = 2;
     #}
 
     

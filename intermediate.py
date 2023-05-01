@@ -396,9 +396,9 @@ class SymbolTable:
     def removeScope(self):
         self.scope_list.pop()
 
-    def updateField(self, code, next_quad):
+    def updateField(self, next_quad):
         count = 0
-        if code:
+        if next_quad:
             self.scope_list[-2].entity_list[-1].starting_quad = next_quad
         else:
             for entity_ in self.scope_list[-1].entity_list:
@@ -525,7 +525,7 @@ class syntax:
                                     tkn = self.lex.next_token()
 
                                 self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_") #generating the intermediate code for the begin block
-                                self.sym.updateField(True, self.inter.nextQuad())                       # updating the field of the main function in the symbol table
+                                self.sym.updateField(self.inter.nextQuad())                       # updating the field of the main function in the symbol table
                                 maybe_tkn = self.statements(tkn)                                        #calling statements
 
 
@@ -537,7 +537,7 @@ class syntax:
 
                                         print(self.sym)                                                         #printing the symbol table
 
-                                        self.sym.updateField(False, None)                                       # updating the field of the procedure in the symbol table
+                                        self.sym.updateField(None)                                       # updating the field of the procedure in the symbol table
                                         self.sym.removeScope()                                                  #removing the scope from the symbol table
 
                                         print(self.sym)                                                          #printing the symbol table
@@ -614,7 +614,7 @@ class syntax:
                                     tkn = self.lex.next_token()
 
                                 self.inter.genQuad("begin_block", tkn_func.recognized_string, "_", "_") #generating the intermediate code for the begin block
-                                self.sym.updateField(True, self.inter.nextQuad())                       # updating the starting quad field of the main function in the symbol table
+                                self.sym.updateField(self.inter.nextQuad())                       # updating the starting quad field of the main function in the symbol table
                                 maybe_tkn = self.statements(tkn)                                        #calling statements
 
                                 if maybe_tkn:                                                           #if maybe_tkn is not None
@@ -626,7 +626,7 @@ class syntax:
 
                                         print(self.sym)
 
-                                        self.sym.updateField(False, None)               # updating the framelength field of the procedure in the symbol table
+                                        self.sym.updateField(None)               # updating the framelength field of the procedure in the symbol table
                                         self.sym.removeScope()                          #removing the scope
 
                                         print(self.sym)                                 #printing the symbol table
