@@ -281,7 +281,7 @@ class Constant(Entity):
         self.value = value
 
     def __str__(self):
-        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.value)
+        return "Constant:\t" + str(self.name) + "/" + str(self.data_type) + "/" + str(self.value)
 
 class Variable(Entity):
     
@@ -291,7 +291,7 @@ class Variable(Entity):
             self.offset = offset
 
         def __str__(self):
-            return str(self.name) + "/" + str(self.data_type) + "/" + str(self.offset)
+            return "Variable:\t" + str(self.name) + "/" + str(self.data_type) + "/" + str(self.offset)
 
 class FormalParameter(Entity):
 
@@ -316,7 +316,7 @@ class Procedure(Entity):
         for i in self.formal_parameters:
             form_par_str += str(i) + " | "
         form_par_str += "\b\b\b] "
-        return str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str
+        return "Main function:\t" + str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str
 
 
     
@@ -328,7 +328,7 @@ class TemporaryVariable(Variable):
         super().__init__(name, data_type, offset)
 
     def __str__(self):
-        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.offset)
+        return "Temporary variable:\t" + str(self.name) + "/" + str(self.data_type) + "/" + str(self.offset)
 
 class Parameter(FormalParameter):
 
@@ -337,7 +337,7 @@ class Parameter(FormalParameter):
         self.offset = offset
 
     def __str__(self):
-        return str(self.name) + "/" + str(self.data_type) + "/" + str(self.mode) + "/" + str(self.offset)
+        return "Parameter:\t" + str(self.name) + "/" + str(self.data_type) + "/" + str(self.mode) + "/" + str(self.offset)
 
 class Function(Procedure):
     
@@ -350,7 +350,7 @@ class Function(Procedure):
             for i in self.formal_parameters:
                 form_par_str += str(i) + " | "
             form_par_str += "\b\b\b] "
-            return str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str+ "/" + str(self.data_type)
+            return "Function:\t" + str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str+ "/" + str(self.data_type)
 
 
 
@@ -367,8 +367,8 @@ class Scope:
     def __str__(self):
         ent_lst_str = ""
         for entity_ in self.entity_list:
-            ent_lst_str += str(entity_) + "\t"
-        return str(self.level) + "/" + ent_lst_str
+            ent_lst_str += "\t" + str(entity_) + "\n"
+        return "level:" + str(self.level) + "'\n" + ent_lst_str
     
     
 
@@ -418,6 +418,7 @@ class SymbolTable:
         str_ret = ""
         for scope in self.scope_list:
             str_ret += str(scope) + "\n"
+        str_ret += "##############################################################################################################\n"
         return str_ret
 
 
