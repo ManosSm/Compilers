@@ -312,11 +312,14 @@ class Procedure(Entity):
         self.formal_parameters = []
 
     def __str__(self):
-        form_par_str = " ["
-        for i in self.formal_parameters:
-            form_par_str += str(i) + " | "
-        form_par_str += "\b\b\b] "
-        return "Main function:\t" + str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str
+
+        form_par_str = ""
+        if len(self.formal_parameters) != 0:
+            form_par_str = "/ ["
+            for i in self.formal_parameters:
+                form_par_str += str(i) + " , "
+            form_par_str += "\b\b\b] "
+        return "Main function:\t" + str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + form_par_str
 
 
     
@@ -346,11 +349,14 @@ class Function(Procedure):
             self.data_type = data_type
 
         def __str__(self):
-            form_par_str = " ["
-            for i in self.formal_parameters:
-                form_par_str += str(i) + " | "
-            form_par_str += "\b\b\b] "
-            return "Function:\t" + str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) + "/" + form_par_str+ "/" + str(self.data_type)
+
+            form_par_str = ""
+            if len(self.formal_parameters) != 0:
+                form_par_str = "/ ["
+                for par in self.formal_parameters:
+                    form_par_str += str(par) + " , "
+                form_par_str += "\b\b\b] "
+            return "Function:\t" + str(self.name) + "/" + str(self.starting_quad) + "/" + str(self.frame_length) +  form_par_str + "/" + str(self.data_type)
 
 
 
@@ -368,7 +374,7 @@ class Scope:
         ent_lst_str = ""
         for entity_ in self.entity_list:
             ent_lst_str += "\t" + str(entity_) + "\n"
-        return "level:" + str(self.level) + "'\n" + ent_lst_str
+        return "level " + str(self.level) + ":\n" + ent_lst_str
     
     
 
@@ -418,7 +424,7 @@ class SymbolTable:
         str_ret = ""
         for scope in self.scope_list:
             str_ret += str(scope) + "\n"
-        str_ret += "##############################################################################################################\n"
+        str_ret += "-------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
         return str_ret
 
 
@@ -467,6 +473,7 @@ class syntax:
 
     def def_main_part(self, tkn):                   
 
+        print("\n############################################################\nSymbol Table (prints at the end of every function/procedure)\n############################################################\n")
         self.sym.addScope()                                 #adding a new scope to the symbol table
         if not self.def_main_function(tkn):                 #making sure that the program has at least one main function
            return None

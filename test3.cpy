@@ -21,7 +21,6 @@ def main_bigger_smaller_of_3():
 
             return (    a  );
 
-        a = a + b;
 
 	#}
 

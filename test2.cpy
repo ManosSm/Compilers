@@ -1,4 +1,4 @@
-def sum_100():
+def main_sum_100():
 #{
     #declare x
     #declare y
@@ -27,4 +27,4 @@ def sum_100():
 
 if __name__ == "__main__":
     #$ call of main functions #$
-    sum_100();
+    main_sum_100();
