@@ -433,9 +433,11 @@ class SymbolTable:
 
 class FinalCode:
 
-    def __init__(self, sym, assembly_file):
+    def __init__(self, sym, inter, assembly_file):
         self.sym = sym
+        self.inter = inter
         self.assembly_file = assembly_file
+        self.quad_counter = 0
 
 
     def produce(self, to_produce):
@@ -447,7 +449,7 @@ class FinalCode:
 
         var_info = self.sym.searchEntity(v)
 
-        if var_info[0].isinstance(Procedure):
+        if isinstance(var_info[0],Procedure):
             print("Error 78: variable", v, "has the same name as a procedure or function")
             exit(5)
 
@@ -488,10 +490,68 @@ class FinalCode:
         else:
             v_info = self.sym.searchEntity(v)                                                   # search in the symbol table for the variable v
             if v_info[1] == 1:                                                                  # if v is a global variable
-                self.produce("sw " + str(reg) + ", " + "-" + str(v_info[1].offset) + "(gp)")
+                self.produce("sw " + str(reg) + ", " + "-" + str(v_info[0].offset) + "(gp)")
             else:                                                                               # if v is a non global variable or parameter
                 self.gnlvcode(v)
                 self.produce("sw " + str(reg) + ", " + "(t0)")
+
+    def inter_to_final(self):
+
+        for qd in self.inter.quad_list[self.quad_counter:]:
+            self.produce("L" + str(self.quad_counter) + ":")
+            self.quad_counter += 1
+
+            qd_ = qd.operator
+            if qd_ == "jump":
+                pass
+            elif qd_ == "ret":
+                pass
+            elif qd_ == "par":
+                pass
+            elif qd_ == "call":
+                pass
+            elif qd_ == "halt":
+                pass
+            elif qd_ == "begin_block":
+                pass
+            elif qd_ == "end_block":
+                pass
+            elif qd_ == "inp":
+                pass
+            elif qd_ == "out":
+                pass
+
+
+
+
+            elif qd_ == "=":
+                self.storerv(qd.op1, qd.op3)
+
+
+
+
+            elif qd_ == "+":
+                pass
+            elif qd_ == "-":
+                pass
+            elif qd_ == "*":
+                pass
+            elif qd_ == "//":
+                pass
+
+            #TODO: Problem with integers instead of reg. Maybe make if statement and load it to a temp reg if needed
+            elif qd_ == "<":
+                self.produce("blt " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
+            elif qd_ == ">":
+                self.produce("bgt " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
+            elif qd_ == "!=":
+                self.produce("bne " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
+            elif qd_ == "==":
+                self.produce("beq " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
+            elif qd_ == "<=":
+                self.produce("ble " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
+            elif qd_ == ">=":
+                self.produce("bge " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
 
 
 
@@ -511,7 +571,7 @@ class syntax:
         self.inter = IntermediateCode()
         self.sym = SymbolTable()
         self.assembly_file = open("a.txt", "w")
-        self.final = FinalCode(self.sym,self.assembly_file)
+        self.final = FinalCode(self.sym,self.inter,self.assembly_file)
 
 
 
@@ -556,6 +616,7 @@ class syntax:
         while(self.def_main_function(tkn)):
             tkn = self.lex.next_token()
 
+        self.final.inter_to_final()                         #calling the inter_to_final function
         self.sym.removeScope()                              #removing the scope from the symbol table
         return tkn
 
@@ -611,9 +672,10 @@ class syntax:
                                         print(self.sym)                                                         #printing the symbol table
 
                                         self.sym.updateField(None)                                       # updating the field of the procedure in the symbol table
+                                        self.final.inter_to_final()                                             # calling the inter_to_final function
                                         self.sym.removeScope()                                                  #removing the scope from the symbol table
 
-                                        print(self.sym)                                                          #printing the symbol table
+                                        print(self.sym)                                                         #printing the symbol table
 
                                         return True
 
@@ -700,6 +762,7 @@ class syntax:
                                         print(self.sym)
 
                                         self.sym.updateField(None)               # updating the framelength field of the procedure in the symbol table
+                                        self.final.inter_to_final()                     # calling the inter_to_final function
                                         self.sym.removeScope()                          #removing the scope
 
                                         print(self.sym)                                 #printing the symbol table
@@ -1561,6 +1624,7 @@ class syntax:
 
                             self.inter.genQuad("halt", "_", "_", "_")                       #generating quad
                             self.inter.genQuad("end_block", "main_program", "_", "_")       #generating quad
+                            self.final.inter_to_final()                                     #calling inter_to_final
                             return tkn
         
 
