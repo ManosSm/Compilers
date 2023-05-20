@@ -7,8 +7,10 @@ def main_bigger_smaller_of_3():
     #declare smallest
     
     def bigger(a,b):
-    #{   
+    #{
+        z = 42;
         if (a>b):
+
             return (a);
         else:
             return (bigger(b-1,a));  

@@ -415,7 +415,7 @@ class SymbolTable:
         for scope in reversed(self.scope_list):
             for entity in reversed(scope.entity_list):
                 if entity.name == name:
-                    return entity
+                    return [entity, scope.level]
         print("Error 77: entity", name, "not found")
         exit(4)
     
@@ -426,6 +426,75 @@ class SymbolTable:
             str_ret += str(scope) + "\n"
         str_ret += "-------------------------------------------------------------------------------------------------------------------------------------------------------------\n"
         return str_ret
+
+
+##########################################################      final code     ##########################################################
+
+
+class FinalCode:
+
+    def __init__(self, sym, assembly_file):
+        self.sym = sym
+        self.assembly_file = assembly_file
+
+
+    def produce(self, to_produce):
+
+        self.assembly_file.write(to_produce + "\n")
+
+
+    def gnlvcode(self, v):
+
+        var_info = self.sym.searchEntity(v)
+
+        if var_info[0].isinstance(Procedure):
+            print("Error 78: variable", v, "has the same name as a procedure or function")
+            exit(5)
+
+        current_level = self.sym.scope_list[-1].level
+
+
+        if var_info[1] == current_level:
+
+            self.produce("addi t0, sp, -" + str(var_info[0].offset))
+        else:
+            self.produce("lw t0, -4(sp)")
+            while var_info[1] != current_level:
+                self.produce("lw t0, -4(t0)")
+                current_level -= 1
+            self.produce("addi t0, t0, -" + str(var_info[0].offset))
+
+
+
+    def loadvr(self, v, reg):
+        if v.isnumeric():                                                                   # if v is an Integer
+            self.produce("li " + str(reg) + ", " + str(v))
+        else:
+            v_info = self.sym.searchEntity(v)                                                   # search in the symbol table for the variable v
+            if v_info[1] == 1:                                                                  # if v is a global variable
+                self.produce("lw " + str(reg) + ", " + "-" + str(v_info[1].offset) + "(gp)")
+
+            else:                                                                               # if v is a non global variable or parameter
+                self.gnlvcode(v)
+                self.produce("lw " + str(reg) + ", " + "(t0)")
+
+
+
+    def storerv(self, reg, v):
+        if reg.isnumeric():                                                                 # if v is an Integer
+            self.loadvr(str(reg), "t0")
+            self.storerv("t0", str(v))
+
+        else:
+            v_info = self.sym.searchEntity(v)                                                   # search in the symbol table for the variable v
+            if v_info[1] == 1:                                                                  # if v is a global variable
+                self.produce("sw " + str(reg) + ", " + "-" + str(v_info[1].offset) + "(gp)")
+            else:                                                                               # if v is a non global variable or parameter
+                self.gnlvcode(v)
+                self.produce("sw " + str(reg) + ", " + "(t0)")
+
+
+
 
 
 
@@ -441,6 +510,9 @@ class syntax:
         self.lex = Lex(file_name)
         self.inter = IntermediateCode()
         self.sym = SymbolTable()
+        self.assembly_file = open("a.txt", "w")
+        self.final = FinalCode(self.sym,self.assembly_file)
+
 
 
     ###########################################################
@@ -468,6 +540,7 @@ class syntax:
         elif not (maybe_tkn.family == "EOF"):               #making sure that the program has no more tokens after the call_main_part
             print("Error  2: unexpected token",maybe_tkn.recognized_string,"at line",maybe_tkn.line_number)
             exit(2)
+        self.assembly_file.close()                          #closing the assembly file
 
 
 
