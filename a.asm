@@ -1,0 +1,152 @@
+	.data 
+	str_nl: .asciz "\n" 
+	.text
+
+	j Lmain
+L0:
+	sw ra,(sp)
+	
+L1:
+	lw t0, -12(sp)
+	lw t1, -16(sp)
+	add t2, t0, t1
+	sw t2, -20(sp)
+	
+L2:
+	lw t1, -20(sp)
+	lw t0, -8(sp)
+	sw t1, (t0)
+	
+L3:
+	lw ra,(sp)
+	jr ra
+	
+L4:
+	sw ra,(sp)
+	
+L5:
+	li a7, 5
+	ecall
+	sw a0, -12(gp)
+	
+L6:
+	li a7, 5
+	ecall
+	sw a0, -16(gp)
+	
+L7:
+	li a7, 5
+	ecall
+	sw a0, -20(gp)
+	
+L8:
+	li a7, 5
+	ecall
+	sw a0, -24(gp)
+	
+L9:
+	addi fp, sp, 24
+	lw t0, -12(gp)
+	sw t0, -12(fp)
+	
+L10:
+	addi fp, sp, 24
+	lw t0, -16(gp)
+	sw t0, -16(fp)
+	
+L11:
+	addi fp, sp, 24
+	lw t0, -40(sp)
+	sw t0, -8(fp)
+	
+L12:
+	sw sp,-4(fp)
+	addi sp, sp, 24
+	jal L0
+	addi sp, sp, -24
+	
+L13:
+	lw t1, -40(sp)
+	sw t1, -28(gp)
+	
+L14:
+	addi fp, sp, 24
+	lw t0, -20(gp)
+	sw t0, -12(fp)
+	
+L15:
+	addi fp, sp, 24
+	lw t0, -24(gp)
+	sw t0, -16(fp)
+	
+L16:
+	addi fp, sp, 24
+	lw t0, -44(sp)
+	sw t0, -8(fp)
+	
+L17:
+	sw sp,-4(fp)
+	addi sp, sp, 24
+	jal L0
+	addi sp, sp, -24
+	
+L18:
+	lw t1, -44(sp)
+	sw t1, -32(gp)
+	
+L19:
+	addi fp, sp, 24
+	lw t0, -28(gp)
+	sw t0, -12(fp)
+	
+L20:
+	addi fp, sp, 24
+	lw t0, -32(gp)
+	sw t0, -16(fp)
+	
+L21:
+	addi fp, sp, 24
+	lw t0, -48(sp)
+	sw t0, -8(fp)
+	
+L22:
+	sw sp,-4(fp)
+	addi sp, sp, 24
+	jal L0
+	addi sp, sp, -24
+	
+L23:
+	lw t1, -48(sp)
+	sw t1, -36(gp)
+	
+L24:
+	lw a0, -36(gp)
+	li a7, 1
+	ecall
+	la a0, str_nl
+	li a7, 4
+	ecall
+	
+L25:
+	lw ra,(sp)
+	jr ra
+	
+L26:
+Lmain:
+	sw ra,(sp)
+	
+L27:
+	sw sp,-4(fp)
+	addi sp, sp, 52
+	jal L4
+	addi sp, sp, -52
+	
+L28:
+	li a0, 0
+	li a7, 93
+	ecall
+	
+L29:
+	lw ra,(sp)
+	jr ra
+	

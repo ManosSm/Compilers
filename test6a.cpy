@@ -5,13 +5,15 @@ def main_d0():
     #declare y
 
 
+
     def a():
     #{
         #declare a
+        #declare b
 
         def b():
         #{
-            #declare b
+
             b = a;
             return (b);
         #}

@@ -438,11 +438,13 @@ class FinalCode:
         self.inter = inter
         self.assembly_file = assembly_file
         self.quad_counter = 0
+        self.produce(".data \n\tstr_nl: .asciz \"\\n\" \n\t.text\n")
+        self.produce("j Lmain")
 
 
     def produce(self, to_produce):
 
-        self.assembly_file.write(to_produce + "\n")
+        self.assembly_file.write("\t" + to_produce + "\n")
 
 
     def gnlvcode(self, v):
@@ -461,6 +463,7 @@ class FinalCode:
             self.produce("addi t0, sp, -" + str(var_info[0].offset))
         else:
             self.produce("lw t0, -4(sp)")
+            current_level -= 1
             while var_info[1] != current_level:
                 self.produce("lw t0, -4(t0)")
                 current_level -= 1
@@ -473,10 +476,13 @@ class FinalCode:
             self.produce("li " + str(reg) + ", " + str(v))
         else:
             v_info = self.sym.searchEntity(v)                                                   # search in the symbol table for the variable v
-            if v_info[1] == 1:                                                                  # if v is a global variable
-                self.produce("lw " + str(reg) + ", " + "-" + str(v_info[1].offset) + "(gp)")
+            if (v_info[1] == 1) and (not isinstance(v_info[0], TemporaryVariable)):             # if v is a global variable                                                      # if v in the first scope
+                self.produce("lw " + str(reg) + ", -" + str(v_info[0].offset) + "(gp)")
 
-            else:                                                                               # if v is a non global variable or parameter
+            elif v_info[1] == self.sym.scope_list[-1].level:                                    # if v is in the current scope
+                self.produce("lw " + str(reg) + ", -" + str(v_info[0].offset) + "(sp)")
+
+            else:                                                                               # if v is a parent's variable
                 self.gnlvcode(v)
                 self.produce("lw " + str(reg) + ", " + "(t0)")
 
@@ -489,70 +495,185 @@ class FinalCode:
 
         else:
             v_info = self.sym.searchEntity(v)                                                   # search in the symbol table for the variable v
-            if v_info[1] == 1:                                                                  # if v is a global variable
-                self.produce("sw " + str(reg) + ", " + "-" + str(v_info[0].offset) + "(gp)")
-            else:                                                                               # if v is a non global variable or parameter
+            if (v_info[1] == 1) and (not isinstance(v_info[0], TemporaryVariable)):             # if v is a global variable
+                self.produce("sw " + str(reg) + ", -" + str(v_info[0].offset) + "(gp)")
+            elif v_info[1] == self.sym.scope_list[-1].level:                                    # if v is in the current scope
+                self.produce("sw " + str(reg) + ", -" + str(v_info[0].offset) + "(sp)")
+            else:                                                                               # if v is a parent's variable
                 self.gnlvcode(v)
                 self.produce("sw " + str(reg) + ", " + "(t0)")
 
     def inter_to_final(self):
 
+        par_counter = 8
+
         for qd in self.inter.quad_list[self.quad_counter:]:
-            self.produce("L" + str(self.quad_counter) + ":")
+
+            self.assembly_file.write("L" + str(self.quad_counter) + ":\n")
             self.quad_counter += 1
 
-            qd_ = qd.operator
-            if qd_ == "jump":
-                pass
-            elif qd_ == "ret":
-                pass
-            elif qd_ == "par":
-                pass
-            elif qd_ == "call":
-                pass
-            elif qd_ == "halt":
-                pass
-            elif qd_ == "begin_block":
-                pass
-            elif qd_ == "end_block":
-                pass
-            elif qd_ == "inp":
-                pass
-            elif qd_ == "out":
-                pass
+            qd_operator = qd.operator
+            if qd_operator == "jump":
+                self.produce("j L" + str(qd.op3))
+
+            elif qd_operator == "ret":
+                self.loadvr(qd.op1, "t1")
+                self.produce("lw t0, -8(sp)")
+                self.produce("sw t1, (t0)")
+
+            elif qd_operator == "par":
+                par_counter += 4
+                temp_count = self.quad_counter
+                while self.inter.quad_list[temp_count].operator != "call":
+                    temp_count += 1
+                func_name = self.inter.quad_list[temp_count].op1
+                func_info = self.sym.searchEntity(func_name)
+                frame_length = func_info[0].frame_length
+
+                if qd.op2 == "ret":
+                    self.produce("addi fp, sp, " + str(frame_length))
+                    self.loadvr(qd.op1, "t0")
+                    self.produce("sw t0, -8(fp)")
+                else:
+                    self.produce("addi fp, sp, " + str(frame_length))
+                    self.loadvr(qd.op1, "t0")
+                    self.produce("sw t0, -" + str(par_counter) + "(fp)")
 
 
 
 
-            elif qd_ == "=":
-                self.storerv(qd.op1, qd.op3)
+            elif qd_operator == "call":
+                par_counter = 8
+                func_info = self.sym.searchEntity(qd.op1)
+                self.produce("sw sp,-4(fp)")
+                self.produce("addi sp, sp, " + str(func_info[0].frame_length))
+                self.produce("jal L" + str(func_info[0].starting_quad-1))
+                self.produce("addi sp, sp, -" + str(func_info[0].frame_length))
+
+
+
+            elif qd_operator == "halt":
+                self.produce("li a0, 0")
+                self.produce("li a7, 93")
+                self.produce("ecall")
+
+            elif qd_operator == "begin_block":
+                if qd.op1 == "main_program":
+                    self.assembly_file.write("Lmain:\n")
+                self.produce("sw ra,(sp)")
+
+            elif qd_operator == "end_block":
+                self.produce("lw ra,(sp)")
+                self.produce("jr ra")
+
+
+            elif qd_operator == "inp":
+                self.produce("li a7, 5")
+                self.produce("ecall")
+                self.storerv("a0", qd.op1)
+
+            elif qd_operator == "out":
+
+                self.loadvr(qd.op1, "a0")
+                self.produce("li a7, 1")
+                self.produce("ecall")
+
+                self.produce("la a0, str_nl")
+                self.produce("li a7, 4")
+                self.produce("ecall")
 
 
 
 
-            elif qd_ == "+":
-                pass
-            elif qd_ == "-":
-                pass
-            elif qd_ == "*":
-                pass
-            elif qd_ == "//":
-                pass
+            elif qd_operator == "=":
+                self.loadvr(qd.op1, "t1")
+                self.storerv("t1", qd.op3)
 
-            #TODO: Problem with integers instead of reg. Maybe make if statement and load it to a temp reg if needed
-            elif qd_ == "<":
-                self.produce("blt " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
-            elif qd_ == ">":
-                self.produce("bgt " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
-            elif qd_ == "!=":
-                self.produce("bne " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
-            elif qd_ == "==":
-                self.produce("beq " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
-            elif qd_ == "<=":
-                self.produce("ble " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
-            elif qd_ == ">=":
-                self.produce("bge " + qd.op1 + ", " + qd.op2 + ", " + "L" + qd.op3)
 
+
+
+            elif qd_operator == "+":
+
+                if qd.op1.isnumeric():                              # if op1 is numeric
+                    self.loadvr(qd.op2, "t0")
+                    self.produce("addi t1, t0, " + str(qd.op1))
+                    self.storerv("t1", qd.op3)
+
+                elif qd.op2.isnumeric():                            # if op2 is numeric
+                    self.loadvr(qd.op1, "t0")
+                    self.produce("addi t1, t0, " + str(qd.op2))
+                    self.storerv("t1", qd.op3)
+
+                else:
+                    self.loadvr(qd.op1, "t0")
+                    self.loadvr(qd.op2, "t1")
+                    self.produce("add t2, t0, t1")
+                    self.storerv("t2", qd.op3)
+
+            elif qd_operator == "-":
+
+                if qd.op2.isnumeric():                            # if op2 is numeric
+                    self.loadvr(qd.op1, "t0")
+                    self.produce("addi t1, t0, -" + str(qd.op2))
+                    self.storerv("t1", qd.op3)
+
+                else:
+                    self.loadvr(qd.op1, "t0")
+                    self.loadvr(qd.op2, "t1")
+                    self.produce("sub t2, t0, t1")
+                    self.storerv("t2", qd.op3)
+
+            elif qd_operator == "*":
+
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("mul t2, t0, t1")
+                self.storerv("t2", qd.op3)
+
+            elif qd_operator == "//":
+
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("div t2, t0, t1")
+                self.storerv("t2", qd.op3)
+
+
+            elif qd_operator == "<":
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("blt " + "t0" + ", " + "t1" + ", " + "L" + str(qd.op3))
+
+            elif qd_operator == ">":
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("bgt " + "t0" + ", " + "t1" + ", " + "L" + str(qd.op3))
+
+            elif qd_operator == "!=":
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("bne " + "t0" + ", " + "t1" + ", " + "L" + str(qd.op3))
+
+            elif qd_operator == "==":
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("beq " + "t0" + ", " + "t1" + ", " + "L" + str(qd.op3))
+
+            elif qd_operator == "<=":
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("ble " + "t0" + ", " + "t1" + ", " + "L" + str(qd.op3))
+
+            elif qd_operator == ">=":
+                self.loadvr(qd.op1, "t0")
+                self.loadvr(qd.op2, "t1")
+                self.produce("bge " + "t0" + ", " + "t1" + ", " + "L" + str(qd.op3))
+
+            else:
+                print("Error  0:  Unknown operator in intermediate code")
+                self.produce("Error  0:  Unknown operator in intermediate code")
+                exit(5)
+
+            self.produce("")
 
 
 
@@ -570,8 +691,8 @@ class syntax:
         self.lex = Lex(file_name)
         self.inter = IntermediateCode()
         self.sym = SymbolTable()
-        self.assembly_file = open("a.txt", "w")
-        self.final = FinalCode(self.sym,self.inter,self.assembly_file)
+        self.assembly_file = open("a.asm", "w")
+        self.final = FinalCode(self.sym, self.inter, self.assembly_file)
 
 
 
@@ -617,7 +738,8 @@ class syntax:
             tkn = self.lex.next_token()
 
         self.final.inter_to_final()                         #calling the inter_to_final function
-        self.sym.removeScope()                              #removing the scope from the symbol table
+        #self.sym.removeScope()                              #removing the scope from the symbol table
+        #print(self.sym)                                     #printing the symbol table
         return tkn
 
 
@@ -1625,6 +1747,8 @@ class syntax:
                             self.inter.genQuad("halt", "_", "_", "_")                       #generating quad
                             self.inter.genQuad("end_block", "main_program", "_", "_")       #generating quad
                             self.final.inter_to_final()                                     #calling inter_to_final
+                            self.sym.removeScope()  # removing the scope from the symbol table
+                            print(self.sym)
                             return tkn
         
 

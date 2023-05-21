@@ -5,10 +5,15 @@ def main_bigger_smaller_of_3():
     #declare z
     #declare biggest
     #declare smallest
-    
+
     def bigger(a,b):
     #{
         #declare f
+        def asd(k):
+        #{
+            return (k);
+        #}
+        z= asd(42);
         z = 42;
         z= z*2;
         z= z//2;
@@ -16,12 +21,12 @@ def main_bigger_smaller_of_3():
 
             return (a);
         else:
-            return (bigger(b-1,a));  
+            return (bigger(b-1,a));
     #}
 
     def smaller(a,b):
     #{
-          
+
         if  (    a   <  b    )    :
 
             return (    a  );
