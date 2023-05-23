@@ -12,7 +12,7 @@ def main_sum_100():
     y = 100;
     z = 0;
 
-    while(x<y):
+    while(x<=y):
     #{
         z = z + x;
         x = x + 1;

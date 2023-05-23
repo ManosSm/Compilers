@@ -55,7 +55,7 @@ def main_primes():
 
     def isPrime(x):
     #{
-        #declare ibasic
+        #declare i
 
         def divides(x,y):
         #{

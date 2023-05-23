@@ -1,58 +1,117 @@
-def main_bigger_smaller_of_3():
+def main_do():
 #{
     #declare x
     #declare y
-    #declare z
-    #declare biggest
-    #declare smallest
+
+
     
-    def bigger(a,b):
+    def test_recursion(a,b):
     #{
         #declare f
-        z = 42;
-        z= z*2;
-        z= z//2;
-        if (a>b):
-
-            return (a);
+        if (b<=a):
+            return (b);
         else:
-            return (bigger(b-1,a));  
+            return (test_recursion(a,b-1));
     #}
 
-    def smaller(a,b):
+    def test_math_operations():                     #$ 1 means test passed#$
     #{
-          
-        if  (    a   <  b    )    :
+        #declare a
+        #declare b
 
-            return (    a  );
-      a = b - 1;
-      a = 1 - b;
-      a = a - b;
-      a = 1 - 1;
+        b = 2;
+        a = b - 1;
+        print(a);
 
-      z = 42;
+        b = 1;
+        a = 2 - b;
+        print(a);
 
-	  a = a + b;
-	  a = 5 + b;
-      a = a + 5;
-      a = 5 + 5;
+        b = 1;
+        a = 2;
+        a = a - b;
+        print(a);
+
+        a = 2 - 1;
+        print(a);
+
+
+
+
+
+
+        a = 1;
+        b = 0;
+	    a = a + b;
+	    print(a);
+
+	    b = -4;
+	    a = 5 + b;
+	    print(a);
+
+	    b = -4;
+        a = b + 5;
+        print(a);
+
+        a = 0 + 1;
+        print(a);
+
+
+
+
+
+        a = 1;
+        b = 1;
+        a = a * b;
+        print(a);
+
+        b = 1;
+	    a = 1 * b;
+	    print(a);
+
+	    b = 1;
+        a = b * 1;
+        print(a);
+
+        a = 1 * 1;
+        print(a);
+
+
+
+
+
+
+        a = 1;
+        b = 1;
+        a = a // b;
+        print(a);
+
+        b = 1;
+	    a = 1 // b;
+	    print(a);
+
+	    b = 1;
+        a = b // 1;
+        print(a);
+
+        a = 1 // 1;
+        print(a);
+
+
+        return (0);
 	#}
 
 
 
-    #$ body of order_3_numbers #$
+
     x = int(input());
     y = int(input());
-    z = int(input());
 
-    biggest = bigger(x,y);
-    biggest = bigger(biggest,z);
 
-    smallest = smaller(x,y);
-    smallest = smaller(smallest,z);
+    print(test_recursion(x,y));
+    x = test_math_operations();
 
-    print(biggest);
-    print(smallest);
+
 
 #}
 
@@ -60,5 +119,5 @@ def main_bigger_smaller_of_3():
 
 
 if __name__ == "__main__":
-    #$ call of main functions #$
-    main_bigger_smaller_of_3();
+
+    main_do();

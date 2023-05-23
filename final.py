@@ -9,6 +9,7 @@ import sys
 
 
 
+
 class Token:
     #Α
     def __init__(self, family, recognized_string, line_number):
@@ -472,7 +473,8 @@ class FinalCode:
 
 
     def loadvr(self, v, reg):
-        if v.isnumeric():                                                                   # if v is an Integer
+
+        if v.isnumeric() or v[0] == "-":                                                                   # if v is an Integer
             self.produce("li " + str(reg) + ", " + str(v))
         else:
             v_info = self.sym.searchEntity(v)                                                   # search in the symbol table for the variable v
@@ -521,21 +523,28 @@ class FinalCode:
                 self.produce("lw t0, -8(sp)")
                 self.produce("sw t1, (t0)")
 
+                self.produce("lw ra,(sp)")
+                self.produce("jr ra")
+
             elif qd_operator == "par":
                 par_counter += 4
                 temp_count = self.quad_counter
+
                 while self.inter.quad_list[temp_count].operator != "call":
                     temp_count += 1
                 func_name = self.inter.quad_list[temp_count].op1
+
                 func_info = self.sym.searchEntity(func_name)
                 frame_length = func_info[0].frame_length
 
-                if qd.op2 == "ret":
+                if par_counter == 12:                                   # changes the fp only the first time (at the first par)
                     self.produce("addi fp, sp, " + str(frame_length))
-                    self.loadvr(qd.op1, "t0")
+
+                if qd.op2 == "ret":
+                    v_info = self.sym.searchEntity(qd.op1)
+                    self.produce("addi t0, sp, -" + str(v_info[0].offset))
                     self.produce("sw t0, -8(fp)")
                 else:
-                    self.produce("addi fp, sp, " + str(frame_length))
                     self.loadvr(qd.op1, "t0")
                     self.produce("sw t0, -" + str(par_counter) + "(fp)")
 
@@ -543,8 +552,13 @@ class FinalCode:
 
 
             elif qd_operator == "call":
+
                 par_counter = 8
                 func_info = self.sym.searchEntity(qd.op1)
+
+                if self.inter.quad_list[self.quad_counter-1].operator != "par":         # if the fuction has no parameters or a return value,
+                    self.produce("addi fp, sp, " + str(func_info[0].frame_length))      # then we set the fp as it would not have been set before
+
                 self.produce("sw sp,-4(fp)")
                 self.produce("addi sp, sp, " + str(func_info[0].frame_length))
                 self.produce("jal L" + str(func_info[0].starting_quad-1))
@@ -560,11 +574,15 @@ class FinalCode:
             elif qd_operator == "begin_block":
                 if qd.op1 == "main_program":
                     self.assembly_file.write("Lmain:\n")
-                self.produce("sw ra,(sp)")
+                    self.produce("addi sp, sp, 12")
+                    self.produce("mv gp, sp")
+                else:
+                    self.produce("sw ra,(sp)")
 
             elif qd_operator == "end_block":
-                self.produce("lw ra,(sp)")
-                self.produce("jr ra")
+                if qd.op1 != "main_program":
+                    self.produce("lw ra,(sp)")
+                    self.produce("jr ra")
 
 
             elif qd_operator == "inp":
@@ -738,8 +756,6 @@ class syntax:
             tkn = self.lex.next_token()
 
         self.final.inter_to_final()                         #calling the inter_to_final function
-        #self.sym.removeScope()                              #removing the scope from the symbol table
-        #print(self.sym)                                     #printing the symbol table
         return tkn
 
 
