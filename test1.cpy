@@ -26,7 +26,7 @@ def main_fibonacci():
         if (x<=1):
             return(x);
         else:
-            return (fibonacci(x-1)+fibonacci(x-2));      
+            return (fibonacci(x-1)+fibonacci(x-2));
     #}
 
     x = int(input());
@@ -37,13 +37,13 @@ def main_fibonacci():
 def main_countdigits():
 #{
     #declare x, count
-    
+
     x = int(input());
     count = 0;
     while (x>0):
     #{
         x = x // 10;
-        count = count + 1;    
+        count = count + 1;
     #}
     print(count);
 #}
@@ -73,7 +73,7 @@ def main_primes():
             i = i + 1;
         #}
         return (1);
-    
+
     #}
 
     #$ body of main_primes#$
